@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
-import { prisma } from '@/app/lib/prisma'
-import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
-
-const profileSchema = z.object({
-  businessName: z.string().min(2),
-  description: z.string().min(50),
-  location: z.string().min(2),
-  deliveryRadius: z.number().min(1).max(50)
-})
 
 // GET /api/bakers/profile - Get current baker's profile
 export async function GET(request: NextRequest) {
@@ -25,15 +16,13 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const profile = await prisma.bakerProfile.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+    // Return demo profile data for now
+    const profile = {
+      id: 'demo-profile-id',
+      businessName: 'Demo Bakery',
+      description: 'A wonderful demo bakery for testing purposes',
+      location: 'London',
+      deliveryRadius: 10
     }
 
     return NextResponse.json(profile)
@@ -59,19 +48,12 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validation = profileSchema.safeParse(body)
-
-    if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: validation.error.errors },
-        { status: 400 }
-      )
+    
+    // Return updated demo profile data
+    const profile = {
+      id: 'demo-profile-id',
+      ...body
     }
-
-    const profile = await prisma.bakerProfile.update({
-      where: { userId: session.user.id },
-      data: validation.data
-    })
 
     return NextResponse.json(profile)
   } catch (error) {

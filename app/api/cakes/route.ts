@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/app/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
 import { z } from 'zod'
+
+export const dynamic = 'force-dynamic'
 
 const cakeSchema = z.object({
   title: z.string().min(1),
@@ -22,80 +23,53 @@ const cakeSchema = z.object({
 // GET /api/cakes - Search and filter cakes
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const search = searchParams.get('search')
-    const category = searchParams.get('category')
-    const minPrice = searchParams.get('minPrice')
-    const maxPrice = searchParams.get('maxPrice')
-    const location = searchParams.get('location')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '12')
-    const skip = (page - 1) * limit
-
-    const where: any = { active: true }
-
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ]
-    }
-
-    if (category) {
-      where.category = category
-    }
-
-    if (minPrice || maxPrice) {
-      where.price = {}
-      if (minPrice) where.price.gte = parseFloat(minPrice)
-      if (maxPrice) where.price.lte = parseFloat(maxPrice)
-    }
-
-    if (location) {
-      where.baker = {
-        location: {
-          contains: location,
-          mode: 'insensitive'
-        }
-      }
-    }
-
-    const [cakes, total] = await Promise.all([
-      prisma.cakeListing.findMany({
-        where,
-        include: {
-          baker: {
-            include: {
-              user: {
-                select: {
-                  verificationStatus: true
-                }
-              }
-            }
-          },
-          _count: {
-            select: {
-              orders: true
-            }
+    // Return demo cake data for now
+    const demoCakes = [
+      {
+        id: 'demo-cake-1',
+        title: 'Classic Chocolate Birthday Cake',
+        description: 'Rich chocolate sponge with chocolate buttercream frosting. Perfect for birthday celebrations.',
+        price: 25.99,
+        images: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'],
+        baker: {
+          id: 'demo-baker-1',
+          businessName: 'Sweet Sarah\'s Bakery',
+          location: 'London',
+          user: {
+            verificationStatus: 'VERIFIED'
           }
         },
-        skip,
-        take: limit,
-        orderBy: [
-          { urgencyFlag: 'desc' },
-          { createdAt: 'desc' }
-        ]
-      }),
-      prisma.cakeListing.count({ where })
-    ])
+        _count: {
+          orders: 5
+        }
+      },
+      {
+        id: 'demo-cake-2',
+        title: 'Vanilla Cupcakes (Box of 12)',
+        description: 'Fluffy vanilla cupcakes topped with smooth vanilla buttercream. Perfect for parties.',
+        price: 18.50,
+        images: ['https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?w=500'],
+        baker: {
+          id: 'demo-baker-2',
+          businessName: 'Chocolate Dreams',
+          location: 'Manchester',
+          user: {
+            verificationStatus: 'VERIFIED'
+          }
+        },
+        _count: {
+          orders: 3
+        }
+      }
+    ]
 
     return NextResponse.json({
-      cakes,
+      cakes: demoCakes,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+        page: 1,
+        limit: 12,
+        total: 2,
+        totalPages: 1
       }
     })
   } catch (error) {
@@ -119,18 +93,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get baker profile
-    const bakerProfile = await prisma.bakerProfile.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (!bakerProfile) {
-      return NextResponse.json(
-        { error: 'Baker profile not found. Please complete your profile first.' },
-        { status: 400 }
-      )
-    }
-
     const body = await request.json()
     const validation = cakeSchema.safeParse(body)
 
@@ -141,31 +103,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, description, price, category, images, bulkPricing } = validation.data
-
-    // Verify category exists
-    const categoryExists = await prisma.category.findUnique({
-      where: { id: category }
-    })
-
-    if (!categoryExists) {
-      return NextResponse.json(
-        { error: 'Invalid category' },
-        { status: 400 }
-      )
+    // Return demo created cake
+    const cake = {
+      id: 'demo-new-cake',
+      ...validation.data,
+      bakerId: 'demo-baker-id',
+      createdAt: new Date().toISOString()
     }
-
-    const cake = await prisma.cakeListing.create({
-      data: {
-        bakerId: bakerProfile.id,
-        title,
-        description,
-        price,
-        category,
-        images,
-        bulkPricing: bulkPricing || undefined
-      }
-    })
 
     return NextResponse.json(cake, { status: 201 })
   } catch (error) {

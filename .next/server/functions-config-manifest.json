@@ -1,1 +1,1 @@
-{"version":1,"functions":{"/api/auth/[...nextauth]":{},"/api/bakers/profile":{}}}
+{"version":1,"functions":{"/api/auth/[...nextauth]":{},"/api/bakers/profile":{},"/api/cakes":{}}}
