@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { prisma } from '@/app/lib/prisma'
 import { z } from 'zod'
+
+export const dynamic = 'force-dynamic'
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -23,37 +23,19 @@ export async function POST(request: Request) {
 
     const { email, password, role } = validation.data
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists' },
-        { status: 400 }
-      )
+    // For demo purposes, simulate user creation
+    const demoUser = {
+      id: 'demo-user-' + Date.now(),
+      email,
+      role,
+      createdAt: new Date().toISOString(),
+      verificationStatus: 'UNVERIFIED'
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
-
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        role,
-      }
-    })
-
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user
 
     return NextResponse.json(
       { 
-        message: 'User created successfully',
-        user: userWithoutPassword 
+        message: 'User created successfully (demo mode)',
+        user: demoUser 
       },
       { status: 201 }
     )

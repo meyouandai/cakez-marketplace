@@ -1,122 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/app/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
+
+export const dynamic = 'force-dynamic'
 
 // GET /api/bakers - Search and filter bakers
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const location = searchParams.get('location')
-    const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '12')
-    const skip = (page - 1) * limit
-
-    const where: any = {}
-
-    if (location) {
-      where.location = {
-        contains: location,
-        mode: 'insensitive'
-      }
-    }
-
-    if (search) {
-      where.OR = [
-        { businessName: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ]
-    }
-
-    const [bakers, total] = await Promise.all([
-      prisma.bakerProfile.findMany({
-        where,
-        include: {
-          user: {
-            select: {
-              email: true,
-              verificationStatus: true,
-              trustBadges: true
-            }
-          },
-          _count: {
-            select: {
-              orders: true,
-              cakeListings: true
-            }
-          }
+    // Return demo baker data
+    const demoBakers = [
+      {
+        id: 'demo-baker-1',
+        businessName: 'Sweet Sarah\'s Bakery',
+        description: 'Specializing in custom birthday cakes and wedding desserts. 15 years of experience creating memorable celebrations.',
+        location: 'London',
+        deliveryRadius: 15,
+        featured: true,
+        quickResponderBadge: true,
+        user: {
+          email: 'sarah@sweetbakery.com',
+          verificationStatus: 'VERIFIED',
+          trustBadges: []
         },
-        skip,
-        take: limit,
-        orderBy: [
-          { featured: 'desc' },
-          { createdAt: 'desc' }
-        ]
-      }),
-      prisma.bakerProfile.count({ where })
-    ])
+        _count: {
+          orders: 25,
+          cakeListings: 8
+        }
+      },
+      {
+        id: 'demo-baker-2',
+        businessName: 'Chocolate Dreams',
+        description: 'Premium chocolate cakes and artisan desserts. Using only the finest Belgian chocolate and organic ingredients.',
+        location: 'Manchester',
+        deliveryRadius: 20,
+        featured: false,
+        quickResponderBadge: true,
+        user: {
+          email: 'info@chocolatedreams.com',
+          verificationStatus: 'VERIFIED',
+          trustBadges: []
+        },
+        _count: {
+          orders: 18,
+          cakeListings: 12
+        }
+      },
+      {
+        id: 'demo-baker-3',
+        businessName: 'The Cake Artist',
+        description: 'Custom designed cakes for every occasion. From whimsical kids\' parties to elegant corporate events.',
+        location: 'Birmingham',
+        deliveryRadius: 12,
+        featured: false,
+        quickResponderBadge: false,
+        user: {
+          email: 'hello@cakeartist.co.uk',
+          verificationStatus: 'VERIFIED',
+          trustBadges: []
+        },
+        _count: {
+          orders: 15,
+          cakeListings: 6
+        }
+      }
+    ]
 
     return NextResponse.json({
-      bakers,
+      bakers: demoBakers,
       pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
+        page: 1,
+        limit: 12,
+        total: 3,
+        totalPages: 1
       }
     })
   } catch (error) {
     console.error('Error fetching bakers:', error)
     return NextResponse.json(
       { error: 'Failed to fetch bakers' },
-      { status: 500 }
-    )
-  }
-}
-
-// POST /api/bakers - Create baker profile
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session || session.user.role !== 'BAKER') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const body = await request.json()
-    const { businessName, description, location, deliveryRadius } = body
-
-    // Check if baker profile already exists
-    const existingProfile = await prisma.bakerProfile.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (existingProfile) {
-      return NextResponse.json(
-        { error: 'Baker profile already exists' },
-        { status: 400 }
-      )
-    }
-
-    const bakerProfile = await prisma.bakerProfile.create({
-      data: {
-        userId: session.user.id,
-        businessName,
-        description,
-        location,
-        deliveryRadius: parseInt(deliveryRadius)
-      }
-    })
-
-    return NextResponse.json(bakerProfile, { status: 201 })
-  } catch (error) {
-    console.error('Error creating baker profile:', error)
-    return NextResponse.json(
-      { error: 'Failed to create baker profile' },
       { status: 500 }
     )
   }
