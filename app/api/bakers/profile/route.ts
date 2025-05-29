@@ -4,6 +4,8 @@ import { authOptions } from '@/app/lib/auth'
 import { prisma } from '@/app/lib/prisma'
 import { z } from 'zod'
 
+export const dynamic = 'force-dynamic'
+
 const profileSchema = z.object({
   businessName: z.string().min(2),
   description: z.string().min(50),
