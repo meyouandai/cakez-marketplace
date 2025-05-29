@@ -1,0 +1,362 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core User Model
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  role              UserRole  @default(CUSTOMER)
+  emailVerified     DateTime?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  responseTimeAvg   Float?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  bakerProfile      BakerProfile?
+  orders            Order[]
+  reviews           Review[]
+  savedSearches     SavedSearch[]
+  buyerRequests     BuyerRequest[]
+  newsletterSubscription NewsletterSubscription?
+  courseEnrollments CourseEnrollment[]
+  certifications    Certification[]
+  referrals         Referral[]
+  insurancePolicy   InsurancePolicy?
+  verifications     Verification[]
+  trustBadges       TrustBadge[]
+  contentPages      ContentPage[]
+}
+
+// Baker Profile
+model BakerProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  businessName        String
+  description         String   @db.Text
+  location            String
+  deliveryRadius      Int      // in miles
+  freshAvailability   Boolean  @default(false)
+  quickResponderBadge Boolean  @default(false)
+  featured            Boolean  @default(false)
+  featuredUntil       DateTime?
+  premiumSubscription Boolean  @default(false)
+  premiumUntil        DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  user               User          @relation(fields: [userId], references: [id])
+  cakeListings       CakeListing[]
+  orders             Order[]
+  bakerResponses     BakerResponse[]
+  responseTracking   ResponseTracking?
+  courses            Course[]
+}
+
+// Cake Listings
+model CakeListing {
+  id              String   @id @default(cuid())
+  bakerId         String
+  title           String
+  description     String   @db.Text
+  price           Float
+  category        String
+  images          String[] // Array of image URLs
+  urgencyFlag     Boolean  @default(false)
+  bulkPricing     Json?    // JSON object for bulk pricing tiers
+  freshIndicator  Boolean  @default(false)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  baker           BakerProfile @relation(fields: [bakerId], references: [id])
+  orders          Order[]
+  categoryRelation Category     @relation(fields: [category], references: [id])
+}
+
+// Categories
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  cakeListings CakeListing[]
+}
+
+// Orders
+model Order {
+  id              String      @id @default(cuid())
+  customerId      String
+  bakerId         String
+  cakeId          String
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  deliveryDate    DateTime
+  deliveryAddress String
+  specialRequests String?     @db.Text
+  insuranceCovered Boolean    @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  customer        User         @relation(fields: [customerId], references: [id])
+  baker           BakerProfile @relation(fields: [bakerId], references: [id])
+  cake            CakeListing  @relation(fields: [cakeId], references: [id])
+  review          Review?
+}
+
+// Reviews
+model Review {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  rating    Int      // 1-5
+  comment   String   @db.Text
+  photos    String[] // Array of photo URLs
+  createdAt DateTime @default(now())
+
+  // Relations
+  order     Order    @relation(fields: [orderId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+// Saved Searches
+model SavedSearch {
+  id             String   @id @default(cuid())
+  userId         String
+  searchCriteria Json     // JSON object with search parameters
+  alertFrequency AlertFrequency @default(WEEKLY)
+  createdAt      DateTime @default(now())
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+// Buyer Requests
+model BuyerRequest {
+  id          String   @id @default(cuid())
+  customerId  String
+  description String   @db.Text
+  location    String
+  urgency     String
+  budget      Float?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  // Relations
+  customer    User           @relation(fields: [customerId], references: [id])
+  responses   BakerResponse[]
+}
+
+// Baker Responses to Buyer Requests
+model BakerResponse {
+  id          String   @id @default(cuid())
+  requestId   String
+  bakerId     String
+  message     String   @db.Text
+  quotedPrice Float
+  createdAt   DateTime @default(now())
+
+  // Relations
+  request     BuyerRequest @relation(fields: [requestId], references: [id])
+  baker       BakerProfile @relation(fields: [bakerId], references: [id])
+}
+
+// Newsletter
+model Newsletter {
+  id        String   @id @default(cuid())
+  subject   String
+  content   String   @db.Text
+  sentAt    DateTime @default(now())
+  openRate  Float?
+  clickRate Float?
+}
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  email     String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// Content Management
+model ContentPage {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  category  String
+  authorId  String
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+// Training & Courses
+model Course {
+  id                String     @id @default(cuid())
+  title             String
+  description       String     @db.Text
+  price             Float
+  courseType        CourseType
+  instructorId      String?
+  certificationLevel String?
+  createdAt         DateTime   @default(now())
+
+  // Relations
+  instructor        BakerProfile?      @relation(fields: [instructorId], references: [id])
+  enrollments       CourseEnrollment[]
+}
+
+model CourseEnrollment {
+  id            String    @id @default(cuid())
+  userId        String
+  courseId      String
+  completedAt   DateTime?
+  certificateUrl String?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id])
+  course        Course    @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+}
+
+model Certification {
+  id               String   @id @default(cuid())
+  userId           String
+  certificationType String
+  issuedDate       DateTime @default(now())
+  expiresDate      DateTime?
+  badgeVisible     Boolean  @default(true)
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id])
+}
+
+// Business Services & Referrals
+model Referral {
+  id            String   @id @default(cuid())
+  userId        String
+  serviceType   String
+  contactInfo   String
+  commissionRate Float
+  status        String
+  createdAt     DateTime @default(now())
+
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model InsurancePolicy {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  provider       String
+  policyNumber   String
+  coverageAmount Float
+  monthlyCost    Float
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  // Relations
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model ShippingKit {
+  id          String   @id @default(cuid())
+  kitType     String
+  price       Float
+  description String
+  branded     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// Trust & Verification
+model Verification {
+  id          String             @id @default(cuid())
+  userId      String
+  documentUrl String
+  status      VerificationStatus @default(PENDING)
+  reviewedAt  DateTime?
+  verifiedBy  String?
+  createdAt   DateTime           @default(now())
+
+  // Relations
+  user        User               @relation(fields: [userId], references: [id])
+}
+
+model ResponseTracking {
+  id              String   @id @default(cuid())
+  bakerId         String   @unique
+  avgResponseHours Float
+  lastUpdated     DateTime @updatedAt
+
+  // Relations
+  baker           BakerProfile @relation(fields: [bakerId], references: [id])
+}
+
+model TrustBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  badgeType   String
+  earnedDate  DateTime @default(now())
+  visible     Boolean  @default(true)
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+// Enums
+enum UserRole {
+  CUSTOMER
+  BAKER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum AlertFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum CourseType {
+  SAFEBAKE_HYGIENE
+  CAKEZ_ACADEMY
+  EXPERT_MASTERCLASS
+}
