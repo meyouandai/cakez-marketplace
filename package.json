@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
-    "build": "prisma generate && prisma db push --accept-data-loss && next build",
-    "postbuild": "prisma db seed || true",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start -H 0.0.0.0",
     "lint": "next lint",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build && prisma db seed"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
