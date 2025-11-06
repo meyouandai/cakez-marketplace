@@ -16,39 +16,31 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
     include: {
       user: {
         select: {
-          email: true,
-          verificationStatus: true,
-          trustBadges: true,
-          _count: {
-            select: {
-              reviews: true
-            }
-          }
+          email: true
         }
       },
       cakeListings: {
         where: { active: true },
         include: {
           baker: {
-            include: {
-              user: {
-                select: {
-                  verificationStatus: true
-                }
-              }
+            select: {
+              id: true,
+              businessName: true,
+              location: true,
+              featured: true
             }
           },
-          _count: {
+          categoryRelation: {
             select: {
-              orders: true
+              name: true
             }
           }
         }
       },
       _count: {
         select: {
-          orders: true,
-          cakeListings: true
+          cakeListings: true,
+          inquiries: true
         }
       }
     }
@@ -60,7 +52,7 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
 
   // Calculate average rating (placeholder for now)
   const averageRating = 4.8
-  const totalReviews = baker.user._count.reviews
+  const totalReviews = 0 // Reviews coming soon
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -83,23 +75,13 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
                 
                 {/* Badges */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {baker.user.verificationStatus === 'VERIFIED' && (
-                    <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                      ✓ Verified Baker
-                    </span>
-                  )}
-                  {baker.quickResponderBadge && (
-                    <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
-                      ⚡ Quick Responder
-                    </span>
-                  )}
                   {baker.featured && (
                     <span className="bg-gold-100 text-gold-800 px-3 py-1 rounded-full text-sm font-semibold">
                       ⭐ Featured
                     </span>
                   )}
                 </div>
-                
+
                 {/* Stats */}
                 <div className="flex gap-6 text-sm">
                   <div>
@@ -107,12 +89,12 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
                     <span className="text-gray-600"> Cakes</span>
                   </div>
                   <div>
-                    <span className="font-semibold">{baker._count.orders}</span>
-                    <span className="text-gray-600"> Orders</span>
+                    <span className="font-semibold">{baker._count.inquiries}</span>
+                    <span className="text-gray-600"> Inquiries</span>
                   </div>
                   <div>
                     <span className="font-semibold">{averageRating}★</span>
-                    <span className="text-gray-600"> ({totalReviews} reviews)</span>
+                    <span className="text-gray-600"> (Reviews coming soon)</span>
                   </div>
                 </div>
               </div>
