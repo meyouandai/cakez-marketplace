@@ -1,2 +1,3 @@
 # Trigger deployment
 # Deploy now
+# Force rebuild with fresh DATABASE_URL
