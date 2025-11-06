@@ -4,3 +4,6 @@ node_modules
 
 /app/generated/prisma
 .vercel
+# Environment variables
+.env*
+!.env.example
