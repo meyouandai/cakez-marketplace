@@ -82,14 +82,6 @@ export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) 
               <p className="text-gray-700 whitespace-pre-wrap">{cake.description}</p>
             </div>
 
-            {/* Bulk Pricing */}
-            {cake.bulkPricing && (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold mb-2">💰 Bulk Discounts Available</h3>
-                <p className="text-sm text-gray-600">Contact baker for bulk order pricing</p>
-              </div>
-            )}
-
             {/* Order Button */}
             <button className="w-full bg-gradient-to-r from-cake-pink to-cake-purple text-white py-3 rounded-lg font-semibold text-lg hover:opacity-90 transition mb-6">
               Order This Cake

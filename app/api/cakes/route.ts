@@ -11,14 +11,7 @@ const cakeSchema = z.object({
   description: z.string().min(10),
   price: z.number().positive(),
   category: z.string(),
-  images: z.array(z.string().url()).min(1),
-  bulkPricing: z.object({
-    enabled: z.boolean(),
-    tiers: z.array(z.object({
-      quantity: z.number().positive(),
-      discount: z.number().min(0).max(100)
-    }))
-  }).optional()
+  images: z.array(z.string().url()).min(1)
 })
 
 // GET /api/cakes - Search and filter cakes
