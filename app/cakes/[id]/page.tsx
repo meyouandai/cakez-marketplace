@@ -70,20 +70,6 @@ export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) 
         {/* Cake Details */}
         <div>
           <div className="bg-white rounded-lg shadow-lg p-8">
-            {/* Badges */}
-            <div className="flex gap-2 mb-4">
-              {cake.urgencyFlag && (
-                <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  🔥 Urgent Orders Available
-                </span>
-              )}
-              {cake.freshIndicator && (
-                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  🌟 Fresh Today
-                </span>
-              )}
-            </div>
-
             <h1 className="text-3xl font-bold mb-2">{cake.title}</h1>
             <p className="text-gray-600 mb-4">{cake.categoryRelation.name}</p>
 
