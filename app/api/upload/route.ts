@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
-import { uploadImage } from '@/app/lib/cloudinary'
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -16,7 +15,6 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get('file') as File
-    const folder = formData.get('folder') as string || 'general'
 
     if (!file) {
       return NextResponse.json(
@@ -34,17 +32,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size (max 2MB for base64 storage)
+    if (file.size > 2 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'File size too large. Maximum size is 5MB.' },
+        { error: 'File size too large. Maximum size is 2MB.' },
         { status: 400 }
       )
     }
 
-    const url = await uploadImage(file, folder)
+    // Convert to base64
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const base64 = buffer.toString('base64')
+    const dataUrl = `data:${file.type};base64,${base64}`
 
-    return NextResponse.json({ url }, { status: 200 })
+    return NextResponse.json({ url: dataUrl }, { status: 200 })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(

@@ -11,8 +11,6 @@ interface ImageUploadProps {
 
 export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
-  const [showUrlInput, setShowUrlInput] = useState(false)
-  const [urlInput, setUrlInput] = useState('')
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -28,9 +26,15 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: I
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
+
+      // Check file size before uploading
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`${file.name} is too large. Maximum size is 2MB. Please resize it and try again.`)
+        continue
+      }
+
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('folder', 'cakes')
 
       try {
         const response = await fetch('/api/upload', {
@@ -39,38 +43,20 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: I
         })
 
         if (!response.ok) {
-          throw new Error('Upload failed')
+          const error = await response.json()
+          throw new Error(error.error || 'Upload failed')
         }
 
         const data = await response.json()
         newImages.push(data.url)
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error uploading image:', error)
-        alert('Failed to upload image. Please use the "Add Image URL" option instead.')
+        alert(`Failed to upload ${file.name}: ${error.message}`)
       }
     }
 
     onImagesChange(newImages)
     setUploading(false)
-  }
-
-  const handleUrlAdd = () => {
-    if (!urlInput.trim()) return
-
-    if (images.length >= maxImages) {
-      alert(`You can only add up to ${maxImages} images`)
-      return
-    }
-
-    // Basic URL validation
-    try {
-      new URL(urlInput)
-      onImagesChange([...images, urlInput])
-      setUrlInput('')
-      setShowUrlInput(false)
-    } catch {
-      alert('Please enter a valid image URL')
-    }
   }
 
   const removeImage = (index: number) => {
@@ -83,12 +69,13 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: I
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
         {images.map((image, index) => (
           <div key={index} className="relative group">
-            <div className="relative h-32 rounded-lg overflow-hidden">
+            <div className="relative h-32 rounded-lg overflow-hidden bg-gray-100">
               <Image
                 src={image}
                 alt={`Cake image ${index + 1}`}
                 fill
                 className="object-cover"
+                unoptimized={image.startsWith('data:')}
               />
             </div>
             <button
@@ -103,17 +90,17 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: I
           </div>
         ))}
 
-        {images.length < maxImages && !showUrlInput && (
-          <label className="relative h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-cake-pink">
+        {images.length < maxImages && (
+          <label className="relative h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-cake-pink transition-colors">
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/jpg"
               multiple
               onChange={handleFileUpload}
               className="sr-only"
               disabled={uploading}
             />
-            <div className="text-center">
+            <div className="text-center p-2">
               {uploading ? (
                 <span className="text-gray-500">Uploading...</span>
               ) : (
@@ -121,60 +108,17 @@ export default function ImageUpload({ images, onImagesChange, maxImages = 5 }: I
                   <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  <span className="text-sm text-gray-500">Upload File</span>
+                  <span className="text-sm text-gray-500">Add Image</span>
                 </>
               )}
             </div>
           </label>
         )}
-
-        {images.length < maxImages && showUrlInput && (
-          <div className="relative h-32 border-2 border-dashed border-cake-pink rounded-lg p-2 flex flex-col">
-            <input
-              type="url"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="flex-1 text-sm px-2 py-1 border rounded mb-1"
-              onKeyDown={(e) => e.key === 'Enter' && handleUrlAdd()}
-            />
-            <div className="flex gap-1">
-              <button
-                type="button"
-                onClick={handleUrlAdd}
-                className="flex-1 bg-cake-pink text-white text-xs py-1 rounded"
-              >
-                Add
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUrlInput(false)
-                  setUrlInput('')
-                }}
-                className="flex-1 bg-gray-300 text-gray-700 text-xs py-1 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
-          Upload up to {maxImages} images. Recommended size: 1200x1200px
-        </p>
-        {images.length < maxImages && !showUrlInput && (
-          <button
-            type="button"
-            onClick={() => setShowUrlInput(true)}
-            className="text-sm text-cake-purple hover:underline"
-          >
-            Or add image URL
-          </button>
-        )}
-      </div>
+      <p className="text-sm text-gray-500">
+        Upload up to {maxImages} images (max 2MB each). Supports JPEG, PNG, and WebP.
+      </p>
     </div>
   )
 }
