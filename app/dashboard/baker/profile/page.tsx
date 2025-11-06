@@ -59,9 +59,8 @@ export default function BakerProfilePage() {
   const onSubmit = async (data: ProfileFormData) => {
     try {
       const method = profile ? 'PUT' : 'POST'
-      const url = profile ? '/api/bakers/profile' : '/api/bakers'
-      
-      const response = await fetch(url, {
+
+      const response = await fetch('/api/bakers/profile', {
         method,
         headers: {
           'Content-Type': 'application/json',
