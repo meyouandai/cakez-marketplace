@@ -37,7 +37,6 @@ export default async function BakerDashboard() {
           email: true
         }
       }
-      cake: true
     },
     orderBy: { createdAt: 'desc' },
     take: 5
@@ -112,34 +111,32 @@ export default async function BakerDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2">Order ID</th>
-                  <th className="text-left py-2">Customer</th>
-                  <th className="text-left py-2">Cake</th>
-                  <th className="text-left py-2">Delivery Date</th>
+                  <th className="text-left py-2">Inquiry ID</th>
+                  <th className="text-left py-2">Customer Name</th>
+                  <th className="text-left py-2">Email</th>
+                  <th className="text-left py-2">Message</th>
                   <th className="text-left py-2">Status</th>
-                  <th className="text-left py-2">Total</th>
+                  <th className="text-left py-2">Date</th>
                 </tr>
               </thead>
               <tbody>
-                {recentInquiries.map((order) => (
-                  <tr key={order.id} className="border-b">
-                    <td className="py-2">{order.id.slice(0, 8)}...</td>
-                    <td className="py-2">{order.customer.email}</td>
-                    <td className="py-2">{order.cake.title}</td>
-                    <td className="py-2">
-                      {new Date(order.deliveryDate).toLocaleDateString()}
-                    </td>
+                {recentInquiries.map((inquiry) => (
+                  <tr key={inquiry.id} className="border-b">
+                    <td className="py-2">{inquiry.id.slice(0, 8)}...</td>
+                    <td className="py-2">{inquiry.customerName}</td>
+                    <td className="py-2">{inquiry.customerEmail}</td>
+                    <td className="py-2 max-w-xs truncate">{inquiry.message}</td>
                     <td className="py-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                        order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        order.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-800' :
+                        inquiry.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                        inquiry.status === 'NEW' ? 'bg-yellow-100 text-yellow-800' :
+                        inquiry.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {order.status}
+                        {inquiry.status}
                       </span>
                     </td>
-                    <td className="py-2 font-medium">£{order.totalAmount}</td>
+                    <td className="py-2">{new Date(inquiry.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
