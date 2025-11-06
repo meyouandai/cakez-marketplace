@@ -1,75 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/app/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/bakers - Search and filter bakers
 export async function GET(request: NextRequest) {
   try {
-    // Return demo baker data
-    const demoBakers = [
-      {
-        id: 'demo-baker-1',
-        businessName: 'Sweet Sarah\'s Bakery',
-        description: 'Specializing in custom birthday cakes and wedding desserts. 15 years of experience creating memorable celebrations.',
-        location: 'London',
-        deliveryRadius: 15,
-        featured: true,
-        quickResponderBadge: true,
-        user: {
-          email: 'sarah@sweetbakery.com',
-          verificationStatus: 'VERIFIED',
-          trustBadges: []
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '12')
+    const search = searchParams.get('search') || ''
+    const location = searchParams.get('location') || ''
+
+    const skip = (page - 1) * limit
+
+    // Build where clause
+    const where: any = {}
+
+    if (search) {
+      where.OR = [
+        { businessName: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' }
+    }
+
+    // Fetch bakers with cake listings count
+    const [bakers, total] = await Promise.all([
+      prisma.bakerProfile.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              email: true,
+            }
+          },
+          _count: {
+            select: {
+              cakeListings: true,
+              inquiries: true,
+            }
+          }
         },
-        _count: {
-          orders: 25,
-          cakeListings: 8
-        }
-      },
-      {
-        id: 'demo-baker-2',
-        businessName: 'Chocolate Dreams',
-        description: 'Premium chocolate cakes and artisan desserts. Using only the finest Belgian chocolate and organic ingredients.',
-        location: 'Manchester',
-        deliveryRadius: 20,
-        featured: false,
-        quickResponderBadge: true,
-        user: {
-          email: 'info@chocolatedreams.com',
-          verificationStatus: 'VERIFIED',
-          trustBadges: []
-        },
-        _count: {
-          orders: 18,
-          cakeListings: 12
-        }
-      },
-      {
-        id: 'demo-baker-3',
-        businessName: 'The Cake Artist',
-        description: 'Custom designed cakes for every occasion. From whimsical kids\' parties to elegant corporate events.',
-        location: 'Birmingham',
-        deliveryRadius: 12,
-        featured: false,
-        quickResponderBadge: false,
-        user: {
-          email: 'hello@cakeartist.co.uk',
-          verificationStatus: 'VERIFIED',
-          trustBadges: []
-        },
-        _count: {
-          orders: 15,
-          cakeListings: 6
-        }
-      }
-    ]
+        orderBy: [
+          { featured: 'desc' },
+          { createdAt: 'desc' }
+        ]
+      }),
+      prisma.bakerProfile.count({ where })
+    ])
 
     return NextResponse.json({
-      bakers: demoBakers,
+      bakers,
       pagination: {
-        page: 1,
-        limit: 12,
-        total: 3,
-        totalPages: 1
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     })
   } catch (error) {
