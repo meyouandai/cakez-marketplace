@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
+import InquiryForm from '@/app/components/InquiryForm'
 
 interface CakeDetailsPageProps {
   params: {
@@ -82,10 +83,13 @@ export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) 
               <p className="text-gray-700 whitespace-pre-wrap">{cake.description}</p>
             </div>
 
-            {/* Order Button */}
-            <button className="w-full bg-gradient-to-r from-cake-pink to-cake-purple text-white py-3 rounded-lg font-semibold text-lg hover:opacity-90 transition mb-6">
-              Order This Cake
-            </button>
+            {/* Inquiry Form */}
+            <InquiryForm
+              cakeId={cake.id}
+              bakerId={cake.baker.id}
+              bakerName={cake.baker.businessName}
+              cakeTitle={cake.title}
+            />
 
             {/* Baker Info */}
             <div className="border-t pt-6">
