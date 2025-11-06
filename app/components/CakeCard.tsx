@@ -8,18 +8,11 @@ interface CakeCardProps {
     description: string
     price: number
     images: string[]
-    urgencyFlag: boolean
-    freshIndicator: boolean
     baker: {
       id: string
       businessName: string
       location: string
-      user: {
-        verificationStatus: string
-      }
-    }
-    _count: {
-      orders: number
+      featured?: boolean
     }
   }
 }
@@ -44,19 +37,9 @@ export default function CakeCard({ cake }: CakeCardProps) {
           
           {/* Badges */}
           <div className="absolute top-2 left-2 flex gap-2">
-            {cake.urgencyFlag && (
-              <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                Urgent
-              </span>
-            )}
-            {cake.freshIndicator && (
-              <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                Fresh Today
-              </span>
-            )}
-            {cake.baker.user.verificationStatus === 'VERIFIED' && (
-              <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                ✓ Verified
+            {cake.baker.featured && (
+              <span className="bg-gold-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                ⭐ Featured
               </span>
             )}
           </div>
@@ -67,12 +50,7 @@ export default function CakeCard({ cake }: CakeCardProps) {
           <p className="text-gray-600 text-sm mb-2 line-clamp-2">{cake.description}</p>
           
           <div className="flex items-center justify-between mb-2">
-            <span className="text-2xl font-bold text-cake-purple">£{cake.price}</span>
-            {cake._count.orders > 0 && (
-              <span className="text-xs text-gray-500">
-                {cake._count.orders} sold
-              </span>
-            )}
+            <span className="text-2xl font-bold text-cake-purple">£{cake.price.toFixed(2)}</span>
           </div>
 
           <div className="text-sm text-gray-500">
