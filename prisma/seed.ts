@@ -65,8 +65,7 @@ async function main() {
       create: {
         email: bakerData.email,
         password: hashedPassword,
-        role: 'BAKER',
-        verificationStatus: 'VERIFIED'
+        role: 'BAKER'
       }
     })
 
@@ -80,7 +79,7 @@ async function main() {
         description: bakerData.description,
         location: bakerData.location,
         deliveryRadius: bakerData.deliveryRadius,
-        quickResponderBadge: true
+        featured: user.email === 'sweet.sarah@example.com' // Make first baker featured
       }
     })
 
