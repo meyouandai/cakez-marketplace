@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import prisma from '@/app/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,37 +14,58 @@ const registerSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    
+
     const validation = registerSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input' },
+        { error: 'Invalid input', details: validation.error.errors },
         { status: 400 }
       )
     }
 
     const { email, password, role } = validation.data
 
-    // For demo purposes, simulate user creation
-    const demoUser = {
-      id: 'demo-user-' + Date.now(),
-      email,
-      role,
-      createdAt: new Date().toISOString(),
-      verificationStatus: 'UNVERIFIED'
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 409 }
+      )
     }
 
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        role,
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      }
+    })
+
     return NextResponse.json(
-      { 
-        message: 'User created successfully (demo mode)',
-        user: demoUser 
+      {
+        message: 'User created successfully',
+        user
       },
       { status: 201 }
     )
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create user' },
       { status: 500 }
     )
   }

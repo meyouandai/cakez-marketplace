@@ -1,5 +1,7 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import bcrypt from "bcryptjs"
+import prisma from "./prisma"
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -17,17 +19,37 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // For now, return a demo user to get the app working
-        // In production, you would validate against your database
-        if (credentials.email === "demo@cakez.com" && credentials.password === "demo123") {
-          return {
-            id: "demo-user-id",
-            email: "demo@cakez.com",
-            role: "BAKER",
-          }
-        }
+        try {
+          // Find user in database
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            include: { bakerProfile: true }
+          })
 
-        return null
+          if (!user) {
+            return null
+          }
+
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          // Return user data for JWT
+          return {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error("Auth error:", error)
+          return null
+        }
       }
     })
   ],
