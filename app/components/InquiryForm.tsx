@@ -28,36 +28,32 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
     setLoading(true)
 
     try {
-      const response = await fetch('/api/inquiries', {
+      // Create Stripe checkout session
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          bakerProfileId: bakerId,
+          cakeId,
           customerName: formData.customerName,
           customerEmail: formData.customerEmail,
-          customerPhone: formData.customerPhone || undefined,
+          customerPhone: formData.customerPhone || '',
           message: formData.message,
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to send inquiry')
+        throw new Error('Failed to create checkout session')
       }
 
-      alert('Inquiry sent successfully! The baker will contact you soon.')
-      setIsOpen(false)
-      setFormData({
-        customerName: '',
-        customerEmail: session?.user?.email || '',
-        customerPhone: '',
-        message: ''
-      })
+      const data = await response.json()
+
+      // Redirect to Stripe checkout
+      window.location.href = data.url
     } catch (error) {
-      console.error('Error sending inquiry:', error)
-      alert('Failed to send inquiry. Please try again.')
-    } finally {
+      console.error('Error creating checkout:', error)
+      alert('Failed to proceed to checkout. Please try again.')
       setLoading(false)
     }
   }
@@ -76,7 +72,7 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
         onClick={handleButtonClick}
         className="w-full bg-gradient-to-r from-cake-pink to-cake-purple text-white py-3 rounded-lg font-semibold text-lg hover:opacity-90 transition mb-6"
       >
-        Contact Baker
+        Buy This Cake 🛒
       </button>
     )
   }
@@ -84,8 +80,10 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
   return (
     <div className="mb-6">
       <div className="bg-white border-2 border-cake-pink rounded-lg p-6">
-        <h3 className="text-xl font-semibold mb-4">Contact {bakerName}</h3>
-        <p className="text-sm text-gray-600 mb-4">Inquiring about: {cakeTitle}</p>
+        <h3 className="text-xl font-semibold mb-4">Order from {bakerName}</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          <strong>{cakeTitle}</strong>
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -118,10 +116,11 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone (Optional)
+              Phone *
             </label>
             <input
               type="tel"
+              required
               value={formData.customerPhone}
               onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cake-pink focus:border-transparent"
@@ -131,7 +130,7 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Message *
+              Special Requirements *
             </label>
             <textarea
               required
@@ -139,8 +138,14 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cake-pink focus:border-transparent"
-              placeholder="Tell the baker about your requirements, occasion, date needed, etc."
+              placeholder="When do you need it? Any special decorations, flavors, or dietary requirements?"
             />
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              💳 You'll be taken to secure payment. The baker will contact you after payment to confirm all details.
+            </p>
           </div>
 
           <div className="flex gap-3">
@@ -149,12 +154,13 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
               disabled={loading}
               className="flex-1 bg-gradient-to-r from-cake-pink to-cake-purple text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50"
             >
-              {loading ? 'Sending...' : 'Send Inquiry'}
+              {loading ? 'Processing...' : 'Proceed to Payment'}
             </button>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-6 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50"
+              disabled={loading}
+              className="px-6 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
             >
               Cancel
             </button>
