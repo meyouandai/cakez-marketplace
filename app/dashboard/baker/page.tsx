@@ -18,7 +18,7 @@ export default async function BakerDashboard() {
       _count: {
         select: {
           cakeListings: true,
-          orders: true
+          inquiries: true
         }
       }
     }
@@ -28,11 +28,15 @@ export default async function BakerDashboard() {
     redirect('/dashboard/baker/profile')
   }
 
-  // Get recent orders
-  const recentOrders = await prisma.order.findMany({
-    where: { bakerId: bakerProfile.id },
+  // Get recent inquiries
+  const recentInquiries = await prisma.inquiry.findMany({
+    where: { bakerProfileId: bakerProfile.id },
     include: {
-      customer: true,
+      customer: {
+        select: {
+          email: true
+        }
+      }
       cake: true
     },
     orderBy: { createdAt: 'desc' },
@@ -54,9 +58,9 @@ export default async function BakerDashboard() {
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-500">Total Orders</h3>
+          <h3 className="text-sm font-medium text-gray-500">Total Inquiries</h3>
           <p className="text-3xl font-bold text-cake-pink mt-2">
-            {bakerProfile._count.orders}
+            {bakerProfile._count.inquiries}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -86,10 +90,10 @@ export default async function BakerDashboard() {
             Manage Cakes
           </Link>
           <Link
-            href="/dashboard/baker/orders"
+            href="/dashboard/baker/inquiries"
             className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-300"
           >
-            View Orders
+            View Inquiries
           </Link>
           <Link
             href="/dashboard/baker/profile"
@@ -100,10 +104,10 @@ export default async function BakerDashboard() {
         </div>
       </div>
 
-      {/* Recent Orders */}
+      {/* Recent Inquiries */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
-        {recentOrders.length > 0 ? (
+        <h2 className="text-xl font-semibold mb-4">Recent Inquiries</h2>
+        {recentInquiries.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -117,7 +121,7 @@ export default async function BakerDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((order) => (
+                {recentInquiries.map((order) => (
                   <tr key={order.id} className="border-b">
                     <td className="py-2">{order.id.slice(0, 8)}...</td>
                     <td className="py-2">{order.customer.email}</td>
@@ -142,7 +146,7 @@ export default async function BakerDashboard() {
             </table>
           </div>
         ) : (
-          <p className="text-gray-500">No orders yet. Share your cakes to get started!</p>
+          <p className="text-gray-500">No inquiries yet. Share your cakes to get started!</p>
         )}
       </div>
     </div>

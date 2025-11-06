@@ -14,20 +14,15 @@ export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) 
     where: { id: params.id },
     include: {
       baker: {
-        include: {
-          user: {
-            select: {
-              verificationStatus: true
-            }
-          }
+        select: {
+          id: true,
+          businessName: true,
+          location: true,
+          deliveryRadius: true,
+          featured: true
         }
       },
-      categoryRelation: true,
-      _count: {
-        select: {
-          orders: true
-        }
-      }
+      categoryRelation: true
     }
   })
 
@@ -123,11 +118,8 @@ export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) 
                     <p className="text-sm text-gray-600">📍 {cake.baker.location}</p>
                   </div>
                   <div className="text-right">
-                    {cake.baker.user.verificationStatus === 'VERIFIED' && (
-                      <span className="text-blue-600 text-sm font-semibold">✓ Verified</span>
-                    )}
-                    {cake._count.orders > 0 && (
-                      <p className="text-sm text-gray-500">{cake._count.orders} orders</p>
+                    {cake.baker.featured && (
+                      <span className="text-gold-600 text-sm font-semibold">⭐ Featured</span>
                     )}
                   </div>
                 </div>
