@@ -10,14 +10,12 @@ interface Baker {
   location: string
   deliveryRadius: number
   featured: boolean
-  quickResponderBadge: boolean
   user: {
-    verificationStatus: string
-    trustBadges: any[]
+    email: string
   }
   _count: {
-    orders: number
     cakeListings: number
+    inquiries: number
   }
 }
 
@@ -115,24 +113,10 @@ export default function BakersPage() {
 
                   <p className="text-gray-700 mb-4 line-clamp-2">{baker.description}</p>
 
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {baker.user.verificationStatus === 'VERIFIED' && (
-                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-semibold">
-                        ✓ Verified
-                      </span>
-                    )}
-                    {baker.quickResponderBadge && (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
-                        ⚡ Quick Responder
-                      </span>
-                    )}
-                  </div>
-
                   {/* Stats */}
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>{baker._count.cakeListings} cakes</span>
-                    <span>{baker._count.orders} orders</span>
+                    <span>{baker._count.inquiries} inquiries</span>
                     <span>Delivers {baker.deliveryRadius} miles</span>
                   </div>
                 </div>
