@@ -11,14 +11,16 @@ export default async function MessagesPage() {
     redirect('/auth/signin')
   }
 
-  // Get all conversations for this user
+  // Get all conversations for this user (exclude archived and deleted)
   const conversations = await prisma.conversation.findMany({
     where: {
       participants: {
         some: {
-          userId: session.user.id
+          userId: session.user.id,
+          archived: false
         }
-      }
+      },
+      deletedAt: null
     },
     include: {
       participants: {

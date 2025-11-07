@@ -42,7 +42,9 @@ export default function ArchivedMessagesView({ conversations: initialConversatio
   const router = useRouter()
   const [conversations, setConversations] = useState(initialConversations)
 
-  const handleUnarchive = async (conversationId: string) => {
+  const handleUnarchive = async (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent navigation when clicking unarchive
+
     try {
       const response = await fetch('/api/messages/archive', {
         method: 'POST',
@@ -51,7 +53,7 @@ export default function ArchivedMessagesView({ conversations: initialConversatio
       })
 
       if (response.ok) {
-        // Remove from archived list
+        // Remove from archived list immediately
         setConversations(prev => prev.filter(c => c.id !== conversationId))
       }
     } catch (error) {
@@ -99,7 +101,8 @@ export default function ArchivedMessagesView({ conversations: initialConversatio
             return (
               <div
                 key={conversation.id}
-                className="p-6 flex items-start justify-between hover:bg-gray-50 transition"
+                className="p-6 flex items-start justify-between hover:bg-gray-50 transition cursor-pointer"
+                onClick={() => router.push(`/messages/${conversation.id}`)}
               >
                 <div className="flex items-start gap-3 flex-1">
                   <div className="w-12 h-12 bg-gradient-to-br from-cake-pink to-cake-purple rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
@@ -120,14 +123,19 @@ export default function ArchivedMessagesView({ conversations: initialConversatio
                         {lastMessage.content}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Archived {userParticipant?.archivedAt ? new Date(userParticipant.archivedAt).toLocaleDateString('en-GB') : ''}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        Archived {userParticipant?.archivedAt ? new Date(userParticipant.archivedAt).toLocaleDateString('en-GB') : ''}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => handleUnarchive(conversation.id)}
+                  onClick={(e) => handleUnarchive(conversation.id, e)}
                   className="ml-4 px-4 py-2 text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-600 hover:border-purple-800 rounded-lg transition flex-shrink-0"
                 >
                   Unarchive

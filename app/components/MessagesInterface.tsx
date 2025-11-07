@@ -114,11 +114,16 @@ export default function MessagesInterface({
       })
 
       if (response.ok) {
-        // Remove from list immediately
+        // Remove from list immediately (optimistic update)
         setConversations(prev => prev.filter(c => c.id !== conversationId))
+
+        // Navigate and refresh if viewing the archived conversation
         if (selectedConversationId === conversationId) {
           router.push('/messages')
         }
+
+        // Force a refresh to ensure server data is in sync
+        router.refresh()
       }
     } catch (error) {
       console.error('Error archiving conversation:', error)
@@ -140,11 +145,16 @@ export default function MessagesInterface({
       })
 
       if (response.ok) {
-        // Remove from list immediately
+        // Remove from list immediately (optimistic update)
         setConversations(prev => prev.filter(c => c.id !== conversationId))
+
+        // Navigate and refresh if viewing the deleted conversation
         if (selectedConversationId === conversationId) {
           router.push('/messages')
         }
+
+        // Force a refresh to ensure server data is in sync
+        router.refresh()
       }
     } catch (error) {
       console.error('Error deleting conversation:', error)
