@@ -22,14 +22,18 @@ interface ConversationViewProps {
   conversationId: string
   messages: Message[]
   currentUserId: string
+  otherUserName: string
 }
 
-export default function ConversationView({ conversationId, messages: initialMessages, currentUserId }: ConversationViewProps) {
+export default function ConversationView({ conversationId, messages: initialMessages, currentUserId, otherUserName }: ConversationViewProps) {
   const [messages, setMessages] = useState(initialMessages)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const [otherUserTyping, setOtherUserTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
 
   const scrollToBottom = () => {
@@ -38,7 +42,7 @@ export default function ConversationView({ conversationId, messages: initialMess
 
   useEffect(() => {
     scrollToBottom()
-  }, [messages])
+  }, [messages, otherUserTyping])
 
   useEffect(() => {
     // Mark messages as read when viewing
@@ -48,18 +52,88 @@ export default function ConversationView({ conversationId, messages: initialMess
       body: JSON.stringify({ conversationId })
     })
 
-    // Poll for new messages every 3 seconds
-    const interval = setInterval(() => {
+    // Poll for new messages and typing status every 2 seconds
+    const interval = setInterval(async () => {
+      // Check typing status
+      try {
+        const response = await fetch(`/api/messages/typing-status?conversationId=${conversationId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setOtherUserTyping(data.isTyping && data.userId !== currentUserId)
+        }
+      } catch (err) {
+        // Silently fail - typing status is not critical
+      }
+
       router.refresh()
+    }, 2000)
+
+    return () => {
+      clearInterval(interval)
+      // Clear typing status when leaving
+      if (isTyping) {
+        sendTypingStatus(false)
+      }
+    }
+  }, [conversationId, router, currentUserId, isTyping])
+
+  const sendTypingStatus = async (typing: boolean) => {
+    try {
+      await fetch('/api/messages/typing-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          isTyping: typing
+        })
+      })
+    } catch (err) {
+      // Silently fail - typing status is not critical
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setNewMessage(value)
+
+    // Send typing status
+    if (value.trim() && !isTyping) {
+      setIsTyping(true)
+      sendTypingStatus(true)
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+
+    // Set timeout to stop typing status after 3 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false)
+      sendTypingStatus(false)
     }, 3000)
 
-    return () => clearInterval(interval)
-  }, [conversationId, router])
+    // If input is empty, immediately stop typing
+    if (!value.trim() && isTyping) {
+      setIsTyping(false)
+      sendTypingStatus(false)
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!newMessage.trim()) return
+
+    // Stop typing indicator
+    setIsTyping(false)
+    sendTypingStatus(false)
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
 
     setSending(true)
     setError('')
@@ -132,6 +206,24 @@ export default function ConversationView({ conversationId, messages: initialMess
             )
           })
         )}
+
+        {/* Typing Indicator */}
+        {otherUserTyping && (
+          <div className="flex justify-start">
+            <div className="max-w-[70%]">
+              <p className="text-xs text-gray-600 mb-1 px-1">{otherUserName}</p>
+              <div className="bg-gray-100 rounded-lg px-4 py-2">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-1 px-1">typing...</p>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
@@ -147,7 +239,7 @@ export default function ConversationView({ conversationId, messages: initialMess
           <input
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Type a message..."
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cake-purple focus:border-transparent"
             disabled={sending}
