@@ -169,6 +169,7 @@ model SavedSearch {
 model BuyerRequest {
   id          String   @id @default(cuid())
   customerId  String
+  title       String
   description String   @db.Text
   location    String
   urgency     String
@@ -183,16 +184,17 @@ model BuyerRequest {
 
 // Baker Responses to Buyer Requests
 model BakerResponse {
-  id          String   @id @default(cuid())
-  requestId   String
-  bakerId     String
-  message     String   @db.Text
-  quotedPrice Float
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  requestId     String
+  bakerId       String
+  message       String   @db.Text
+  proposedPrice Float
+  deliveryTime  String
+  createdAt     DateTime @default(now())
 
   // Relations
-  request     BuyerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  baker       BakerProfile @relation(fields: [bakerId], references: [id], onDelete: Cascade)
+  request       BuyerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  baker         BakerProfile @relation(fields: [bakerId], references: [id], onDelete: Cascade)
 }
 
 // ============================================
@@ -248,6 +250,11 @@ model Course {
   courseType        CourseType
   instructorId      String?
   certificationLevel String?
+  duration          String?
+  syllabus          String?    @db.Text
+  prerequisites     String?
+  videoUrl          String?
+  materialUrl       String?
   createdAt         DateTime   @default(now())
 
   // Relations
@@ -259,6 +266,8 @@ model CourseEnrollment {
   id            String    @id @default(cuid())
   userId        String
   courseId      String
+  progress      Int       @default(0)
+  enrolledAt    DateTime  @default(now())
   completedAt   DateTime?
   certificateUrl String?
   createdAt     DateTime  @default(now())
