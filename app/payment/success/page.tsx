@@ -8,6 +8,28 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [countdown, setCountdown] = useState(5)
+  const [orderCreated, setOrderCreated] = useState(false)
+
+  // Create the order when the page loads
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id')
+
+    if (sessionId && !orderCreated) {
+      fetch('/api/complete-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Order created successfully')
+            setOrderCreated(true)
+          }
+        })
+        .catch(err => console.error('Error creating order:', err))
+    }
+  }, [searchParams, orderCreated])
 
   useEffect(() => {
     const timer = setInterval(() => {
