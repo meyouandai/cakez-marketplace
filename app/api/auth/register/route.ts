@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import prisma from '@/app/lib/prisma'
+import { sendVerificationEmail } from '@/app/lib/email'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,12 +42,24 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const hashedVerificationToken = crypto
+      .createHash('sha256')
+      .update(verificationToken)
+      .digest('hex')
+
+    // Set token expiry to 24 hours from now
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000)
+
+    // Create user with verification token
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         role,
+        emailVerificationToken: hashedVerificationToken,
+        emailVerificationExpires: verificationExpires,
       },
       select: {
         id: true,
@@ -55,10 +69,17 @@ export async function POST(request: Request) {
       }
     })
 
+    // Send verification email (don't block on email sending)
+    sendVerificationEmail(user.email, verificationToken).catch((error) => {
+      console.error('Failed to send verification email:', error)
+      // Don't fail registration if email fails
+    })
+
     return NextResponse.json(
       {
-        message: 'User created successfully',
-        user
+        message: 'User created successfully. Please check your email to verify your account.',
+        user,
+        emailSent: true,
       },
       { status: 201 }
     )

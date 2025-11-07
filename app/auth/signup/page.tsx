@@ -13,12 +13,14 @@ export default function SignUp() {
     role: 'CUSTOMER' as 'CUSTOMER' | 'BAKER',
   })
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -45,7 +47,13 @@ export default function SignUp() {
         throw new Error(data.error || 'Something went wrong')
       }
 
-      router.push('/auth/signin')
+      // Show success message
+      setSuccess(data.message || 'Account created! Please check your email to verify your account.')
+
+      // Redirect to signin after 3 seconds
+      setTimeout(() => {
+        router.push('/auth/signin')
+      }, 3000)
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -141,6 +149,12 @@ export default function SignUp() {
 
           {error && (
             <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-800 text-sm text-center p-3 rounded-lg">
+              {success}
+            </div>
           )}
 
           <button
