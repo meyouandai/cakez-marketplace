@@ -387,6 +387,8 @@ model Conversation {
   type        ConversationType   @default(DIRECT)
   subject     String?            // For support conversations
   status      String?            // For support: OPEN, IN_PROGRESS, RESOLVED
+  deletedAt   DateTime?          // Soft delete timestamp
+  deletedBy   String?            // User who initiated delete
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
@@ -401,6 +403,8 @@ model ConversationParticipant {
   conversationId String
   userId         String
   lastReadAt     DateTime?
+  archived       Boolean  @default(false)
+  archivedAt     DateTime?
   createdAt      DateTime @default(now())
 
   // Relations
@@ -417,6 +421,8 @@ model Message {
   senderId       String
   content        String   @db.Text
   read           Boolean  @default(false)
+  deletedAt      DateTime?          // Soft delete timestamp
+  deletedBy      String?            // User who deleted it
   createdAt      DateTime @default(now())
 
   // Relations
