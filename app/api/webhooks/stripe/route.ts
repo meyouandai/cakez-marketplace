@@ -28,23 +28,40 @@ export async function POST(request: NextRequest) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session
 
-    // Create an inquiry/order in the database
     try {
-      await prisma.inquiry.create({
-        data: {
-          customerId: session.metadata!.customerId,
-          bakerProfileId: session.metadata!.bakerId,
-          customerName: session.metadata!.customerName,
-          customerEmail: session.customer_email || session.metadata!.customerEmail || '',
-          customerPhone: session.metadata!.customerPhone,
-          message: session.metadata!.message,
-          status: 'CONTACTED', // Mark as contacted since they paid
-        },
-      })
+      // Check if this is a course enrollment
+      if (session.metadata?.type === 'course_enrollment') {
+        const courseId = session.metadata.courseId
+        const userId = session.metadata.userId
 
-      console.log('✅ Order created for checkout session:', session.id)
+        // Create course enrollment
+        await prisma.courseEnrollment.create({
+          data: {
+            userId,
+            courseId,
+            progress: 0
+          }
+        })
+
+        console.log('✅ Course enrollment created for session:', session.id)
+      } else {
+        // Legacy: Create an inquiry (will be replaced by direct order creation)
+        await prisma.inquiry.create({
+          data: {
+            customerId: session.metadata!.customerId,
+            bakerProfileId: session.metadata!.bakerId,
+            customerName: session.metadata!.customerName,
+            customerEmail: session.customer_email || session.metadata!.customerEmail || '',
+            customerPhone: session.metadata!.customerPhone,
+            message: session.metadata!.message,
+            status: 'CONTACTED',
+          },
+        })
+
+        console.log('✅ Inquiry created for checkout session:', session.id)
+      }
     } catch (error) {
-      console.error('Error creating order:', error)
+      console.error('Error processing checkout session:', error)
     }
   }
 
