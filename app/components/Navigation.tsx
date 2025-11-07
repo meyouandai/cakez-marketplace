@@ -35,6 +35,9 @@ export default function Navigation() {
             <Link href="/buyer-requests" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
               Requests
             </Link>
+            <Link href="/blog" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+              Blog
+            </Link>
 
             {status === 'authenticated' ? (
               <>
@@ -121,6 +124,9 @@ export default function Navigation() {
             </Link>
             <Link href="/buyer-requests" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
               Requests
+            </Link>
+            <Link href="/blog" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+              Blog
             </Link>
             {status === 'authenticated' ? (
               <>
