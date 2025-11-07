@@ -6,12 +6,12 @@ export default function StripeTestPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState('')
 
-  const testStripe = async () => {
+  const testStripe = async (endpoint: string, label: string) => {
     setLoading(true)
-    setResult('Testing...')
+    setResult(`Testing ${label}...`)
 
     try {
-      const response = await fetch('/api/test-stripe', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -21,14 +21,16 @@ export default function StripeTestPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setResult(`❌ Error: ${JSON.stringify(data, null, 2)}`)
+        setResult(`❌ ${label} Error:\n${JSON.stringify(data, null, 2)}`)
       } else {
-        setResult(`✅ Success! Redirecting to Stripe...`)
+        setResult(`✅ ${label} Success! Redirecting to Stripe...`)
         // Redirect to Stripe checkout
-        window.location.href = data.url
+        setTimeout(() => {
+          window.location.href = data.url
+        }, 1000)
       }
     } catch (error: any) {
-      setResult(`❌ Failed: ${error.message}`)
+      setResult(`❌ ${label} Failed: ${error.message}`)
     } finally {
       setLoading(false)
     }
@@ -39,16 +41,26 @@ export default function StripeTestPage() {
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <h1 className="text-2xl font-bold mb-4">Stripe Payment Test</h1>
         <p className="text-gray-600 mb-6">
-          Click the button below to test if Stripe is working
+          Testing two different approaches to Stripe integration
         </p>
 
-        <button
-          onClick={testStripe}
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-cake-pink to-cake-purple text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 mb-4"
-        >
-          {loading ? 'Testing...' : 'Test Stripe Payment'}
-        </button>
+        <div className="space-y-3 mb-6">
+          <button
+            onClick={() => testStripe('/api/test-stripe', 'Stripe SDK')}
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            Test with Stripe SDK
+          </button>
+
+          <button
+            onClick={() => testStripe('/api/test-stripe-direct', 'Direct API')}
+            disabled={loading}
+            className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            Test with Direct HTTP Call
+          </button>
+        </div>
 
         {result && (
           <div className="bg-gray-50 rounded-lg p-4">
