@@ -9,16 +9,16 @@ const typingStatuses = new Map<string, Map<string, { isTyping: boolean; timestam
 // Clean up old typing statuses (older than 5 seconds)
 setInterval(() => {
   const now = Date.now()
-  for (const [conversationId, users] of typingStatuses.entries()) {
-    for (const [userId, status] of users.entries()) {
+  Array.from(typingStatuses.entries()).forEach(([conversationId, users]) => {
+    Array.from(users.entries()).forEach(([userId, status]) => {
       if (now - status.timestamp > 5000) {
         users.delete(userId)
       }
-    }
+    })
     if (users.size === 0) {
       typingStatuses.delete(conversationId)
     }
-  }
+  })
 }, 5000)
 
 // POST - Set typing status
@@ -98,13 +98,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Find if anyone else is typing (exclude current user)
-    for (const [userId, status] of conversationTyping.entries()) {
-      if (userId !== session.user.id && status.isTyping) {
-        // Check if status is recent (within last 5 seconds)
-        if (Date.now() - status.timestamp < 5000) {
-          return NextResponse.json({ isTyping: true, userId })
-        }
-      }
+    const typingUser = Array.from(conversationTyping.entries()).find(([userId, status]) => {
+      return userId !== session.user.id &&
+             status.isTyping &&
+             Date.now() - status.timestamp < 5000
+    })
+
+    if (typingUser) {
+      return NextResponse.json({ isTyping: true, userId: typingUser[0] })
     }
 
     return NextResponse.json({ isTyping: false })
