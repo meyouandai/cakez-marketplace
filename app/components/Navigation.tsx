@@ -60,6 +60,9 @@ export default function Navigation() {
                     </Link>
                   </>
                 )}
+                <Link href="/messages" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+                  Messages
+                </Link>
                 <Link href="/dashboard/courses" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
                   My Courses
                 </Link>
@@ -138,6 +141,9 @@ export default function Navigation() {
                     My Orders
                   </Link>
                 )}
+                <Link href="/messages" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+                  Messages
+                </Link>
                 <Link href="/dashboard/courses" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
                   My Courses
                 </Link>

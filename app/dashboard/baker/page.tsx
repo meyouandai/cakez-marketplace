@@ -18,7 +18,6 @@ export default async function BakerDashboard() {
       _count: {
         select: {
           cakeListings: true,
-          inquiries: true,
           orders: true
         }
       }
@@ -28,20 +27,6 @@ export default async function BakerDashboard() {
   if (!bakerProfile) {
     redirect('/dashboard/baker/profile')
   }
-
-  // Get recent inquiries
-  const recentInquiries = await prisma.inquiry.findMany({
-    where: { bakerProfileId: bakerProfile.id },
-    include: {
-      customer: {
-        select: {
-          email: true
-        }
-      }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 5
-  })
 
   // Get recent orders
   const recentOrders = await prisma.order.findMany({
@@ -80,7 +65,7 @@ export default async function BakerDashboard() {
       </h1>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-500">Total Cakes</h3>
           <p className="text-3xl font-bold text-cake-purple mt-2">
@@ -97,12 +82,6 @@ export default async function BakerDashboard() {
           <h3 className="text-sm font-medium text-gray-500">Total Revenue</h3>
           <p className="text-3xl font-bold text-green-600 mt-2">
             £{(totalRevenue._sum.totalAmount || 0).toFixed(2)}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-sm font-medium text-gray-500">Inquiries</h3>
-          <p className="text-3xl font-bold text-cake-yellow mt-2">
-            {bakerProfile._count.inquiries}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -134,10 +113,10 @@ export default async function BakerDashboard() {
             View Orders
           </Link>
           <Link
-            href="/dashboard/baker/inquiries"
+            href="/messages"
             className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-300"
           >
-            View Inquiries
+            Messages
           </Link>
           <Link
             href="/dashboard/baker/profile"
@@ -201,57 +180,6 @@ export default async function BakerDashboard() {
         )}
       </div>
 
-      {/* Recent Inquiries */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Recent Inquiries</h2>
-          <Link
-            href="/dashboard/baker/inquiries"
-            className="text-sm text-cake-purple hover:text-cake-pink font-medium"
-          >
-            View All →
-          </Link>
-        </div>
-        {recentInquiries.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Inquiry ID</th>
-                  <th className="text-left py-2">Customer Name</th>
-                  <th className="text-left py-2">Email</th>
-                  <th className="text-left py-2">Message</th>
-                  <th className="text-left py-2">Status</th>
-                  <th className="text-left py-2">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentInquiries.map((inquiry) => (
-                  <tr key={inquiry.id} className="border-b">
-                    <td className="py-2">{inquiry.id.slice(0, 8)}...</td>
-                    <td className="py-2">{inquiry.customerName}</td>
-                    <td className="py-2">{inquiry.customerEmail}</td>
-                    <td className="py-2 max-w-xs truncate">{inquiry.message}</td>
-                    <td className="py-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        inquiry.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                        inquiry.status === 'NEW' ? 'bg-yellow-100 text-yellow-800' :
-                        inquiry.status === 'CONTACTED' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {inquiry.status}
-                      </span>
-                    </td>
-                    <td className="py-2">{new Date(inquiry.createdAt).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-gray-500">No inquiries yet. Share your cakes to get started!</p>
-        )}
-      </div>
     </div>
   )
 }
