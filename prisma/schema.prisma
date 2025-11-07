@@ -338,16 +338,22 @@ model ShippingKit {
 
 // Trust & Verification
 model Verification {
-  id          String             @id @default(cuid())
-  userId      String
-  documentUrl String
-  status      VerificationStatus @default(PENDING)
-  reviewedAt  DateTime?
-  verifiedBy  String?
-  createdAt   DateTime           @default(now())
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  status              VerificationStatus @default(PENDING)
+  submittedDate       DateTime           @default(now())
+  businessLicense     String?
+  insurancePolicy     String?
+  hygieneCertificate  String?
+  idDocument          String?
+  additionalInfo      String?            @db.Text
+  reviewedBy          String?
+  reviewNotes         String?            @db.Text
+  verifiedDate        DateTime?
+  createdAt           DateTime           @default(now())
 
   // Relations
-  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ResponseTracking {
