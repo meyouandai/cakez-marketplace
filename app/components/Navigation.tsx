@@ -29,9 +29,20 @@ export default function Navigation() {
             <Link href="/bakers" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
               Find Bakers
             </Link>
+            <Link href="/courses" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+              Courses
+            </Link>
+            <Link href="/buyer-requests" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+              Requests
+            </Link>
 
             {status === 'authenticated' ? (
               <>
+                {session.user.role === 'ADMIN' && (
+                  <Link href="/dashboard/admin" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+                    Admin
+                  </Link>
+                )}
                 {session.user.role === 'BAKER' && (
                   <>
                     <Link href="/dashboard/baker" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
@@ -49,6 +60,9 @@ export default function Navigation() {
                     </Link>
                   </>
                 )}
+                <Link href="/dashboard/courses" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+                  My Courses
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="bg-gradient-to-r from-cake-pink to-cake-purple text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
@@ -96,8 +110,19 @@ export default function Navigation() {
             <Link href="/bakers" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
               Find Bakers
             </Link>
+            <Link href="/courses" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+              Courses
+            </Link>
+            <Link href="/buyer-requests" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+              Requests
+            </Link>
             {status === 'authenticated' ? (
               <>
+                {session.user.role === 'ADMIN' && (
+                  <Link href="/dashboard/admin" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+                    Admin
+                  </Link>
+                )}
                 {session.user.role === 'BAKER' && (
                   <>
                     <Link href="/dashboard/baker" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
@@ -113,6 +138,9 @@ export default function Navigation() {
                     My Orders
                   </Link>
                 )}
+                <Link href="/dashboard/courses" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+                  My Courses
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="w-full text-left text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium"
