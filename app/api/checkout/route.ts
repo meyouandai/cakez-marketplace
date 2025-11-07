@@ -4,12 +4,21 @@ import { authOptions } from '@/app/lib/auth'
 import Stripe from 'stripe'
 import prisma from '@/app/lib/prisma'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil',
-})
-
 export async function POST(request: NextRequest) {
   try {
+    console.log('Checkout API called')
+    console.log('STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY)
+    console.log('STRIPE_SECRET_KEY starts with:', process.env.STRIPE_SECRET_KEY?.substring(0, 7))
+
+    // Initialize Stripe inside the function to ensure env var is loaded
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not configured')
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-05-28.basil',
+    })
+
     const session = await getServerSession(authOptions)
 
     if (!session) {
