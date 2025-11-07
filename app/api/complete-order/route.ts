@@ -44,13 +44,9 @@ export async function POST(request: NextRequest) {
     const stripeSession = await stripeResponse.json()
 
     // Check if order already exists
-    const existingOrder = await prisma.inquiry.findFirst({
+    const existingOrder = await prisma.order.findFirst({
       where: {
-        customerId: stripeSession.metadata.customerId,
-        bakerProfileId: stripeSession.metadata.bakerId,
-        createdAt: {
-          gte: new Date(Date.now() - 5 * 60 * 1000) // Within last 5 minutes
-        }
+        stripeSessionId: sessionId
       }
     })
 
@@ -58,16 +54,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, existing: true })
     }
 
-    // Create the order
-    const order = await prisma.inquiry.create({
+    // Create the order using the new Order model
+    const order = await prisma.order.create({
       data: {
         customerId: stripeSession.metadata.customerId,
-        bakerProfileId: stripeSession.metadata.bakerId,
-        customerName: stripeSession.metadata.customerName,
-        customerEmail: stripeSession.customer_email || stripeSession.metadata.customerEmail || '',
-        customerPhone: stripeSession.metadata.customerPhone,
-        message: stripeSession.metadata.message,
-        status: 'CONTACTED',
+        bakerId: stripeSession.metadata.bakerId,
+        cakeId: stripeSession.metadata.cakeId,
+        status: 'PENDING',
+        totalAmount: stripeSession.amount_total! / 100, // Convert from cents
+        stripeSessionId: sessionId,
+        specialRequests: stripeSession.metadata.message,
+        // deliveryDate and deliveryAddress can be added later by baker/customer
       },
     })
 
