@@ -45,8 +45,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe checkout session using direct API call
-    const successUrl = `${process.env.NEXTAUTH_URL || request.headers.get('origin')}/payment/success?session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `${process.env.NEXTAUTH_URL || request.headers.get('origin')}/cakes/${cakeId}`
+    const origin = request.headers.get('origin') || 'https://cakez-marketplace-yvgc.vercel.app'
+    console.log('Origin:', origin)
+
+    const successUrl = `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `${origin}/cakes/${cakeId}`
+
+    console.log('Success URL:', successUrl)
+    console.log('Cancel URL:', cancelUrl)
 
     const formData = new URLSearchParams({
       'mode': 'payment',
@@ -67,6 +73,7 @@ export async function POST(request: NextRequest) {
       'metadata[message]': message,
     })
 
+    console.log('Calling Stripe API...')
     const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
@@ -76,9 +83,8 @@ export async function POST(request: NextRequest) {
       body: formData.toString(),
     })
 
-    const data = await stripeResponse.json()
-
     console.log('Stripe response status:', stripeResponse.status)
+    const data = await stripeResponse.json()
     console.log('Stripe response data:', JSON.stringify(data, null, 2))
 
     if (!stripeResponse.ok) {
