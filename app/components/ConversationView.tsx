@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 
 interface Message {
   id: string
@@ -34,7 +33,6 @@ export default function ConversationView({ conversationId, messages: initialMess
   const [otherUserTyping, setOtherUserTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const router = useRouter()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -65,7 +63,31 @@ export default function ConversationView({ conversationId, messages: initialMess
         // Silently fail - typing status is not critical
       }
 
-      router.refresh()
+      // Fetch new messages
+      try {
+        // Get timestamp of last message
+        const lastMessageTime = messages.length > 0
+          ? new Date(messages[messages.length - 1].createdAt).toISOString()
+          : new Date(0).toISOString()
+
+        const response = await fetch(`/api/messages/fetch?conversationId=${conversationId}&since=${encodeURIComponent(lastMessageTime)}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.messages && data.messages.length > 0) {
+            // Append new messages to the list
+            setMessages(prevMessages => [...prevMessages, ...data.messages])
+
+            // Mark as read if new messages arrived
+            fetch('/api/messages/mark-read', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ conversationId })
+            })
+          }
+        }
+      } catch (err) {
+        // Silently fail - will retry on next interval
+      }
     }, 2000)
 
     return () => {
@@ -75,7 +97,7 @@ export default function ConversationView({ conversationId, messages: initialMess
         sendTypingStatus(false)
       }
     }
-  }, [conversationId, router, currentUserId, isTyping])
+  }, [conversationId, currentUserId, isTyping, messages])
 
   const sendTypingStatus = async (typing: boolean) => {
     try {
