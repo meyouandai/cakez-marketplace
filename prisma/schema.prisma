@@ -40,7 +40,8 @@ model User {
   verifications     Verification[]
   trustBadges       TrustBadge[]
   contentPages      ContentPage[]
-  inquiries         Inquiry[]  // Keep for backward compatibility with existing data
+  sentMessages      Message[]
+  conversations     ConversationParticipant[]
 }
 
 // Baker Profile
@@ -67,7 +68,6 @@ model BakerProfile {
   bakerResponses     BakerResponse[]
   responseTracking   ResponseTracking?
   courses            Course[]
-  inquiries          Inquiry[]  // Keep for backward compatibility
 }
 
 // ============================================
@@ -372,26 +372,47 @@ model TrustBadge {
 }
 
 // ============================================
-// LEGACY MODEL (Keep for backward compatibility)
+// MESSAGING SYSTEM
 // ============================================
 
-// Customer Inquiries - Keep for existing data
-model Inquiry {
-  id              String   @id @default(cuid())
-  customerId      String
-  bakerProfileId  String
-  customerName    String
-  customerEmail   String
-  customerPhone   String?
-  message         String   @db.Text
-  referralSource  String?
-  status          InquiryStatus @default(NEW)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+// Conversations between users
+model Conversation {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
-  customer        User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  baker           BakerProfile @relation(fields: [bakerProfileId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+// Track who's in each conversation
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+// Individual messages
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String   @db.Text
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
 
 // ============================================
@@ -429,10 +450,4 @@ enum CourseType {
   SAFEBAKE_HYGIENE
   CAKEZ_ACADEMY
   EXPERT_MASTERCLASS
-}
-
-enum InquiryStatus {
-  NEW
-  CONTACTED
-  COMPLETED
 }

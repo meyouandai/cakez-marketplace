@@ -2,7 +2,10 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { prisma } from '@/app/lib/prisma'
-import InquiryForm from '@/app/components/InquiryForm'
+import OrderCakeButton from '@/app/components/OrderCakeButton'
+import MessageBakerButton from '@/app/components/MessageBakerButton'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/lib/auth'
 
 interface CakeDetailsPageProps {
   params: {
@@ -11,12 +14,15 @@ interface CakeDetailsPageProps {
 }
 
 export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) {
+  const session = await getServerSession(authOptions)
+
   const cake = await prisma.cakeListing.findUnique({
     where: { id: params.id },
     include: {
       baker: {
         select: {
           id: true,
+          userId: true,
           businessName: true,
           location: true,
           deliveryRadius: true,
@@ -119,13 +125,32 @@ export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) 
               <p className="text-gray-700 whitespace-pre-wrap">{cake.description}</p>
             </div>
 
-            {/* Inquiry Form */}
-            <InquiryForm
-              cakeId={cake.id}
-              bakerId={cake.baker.id}
-              bakerName={cake.baker.businessName}
-              cakeTitle={cake.title}
-            />
+            {/* Order & Message Buttons */}
+            <div className="space-y-3 mb-6">
+              <OrderCakeButton
+                cakeId={cake.id}
+                bakerId={cake.baker.id}
+                cakeTitle={cake.title}
+                cakePrice={cake.price}
+              />
+
+              {session && session.user.id !== cake.baker.userId && (
+                <MessageBakerButton
+                  bakerId={cake.baker.userId}
+                  bakerName={cake.baker.businessName}
+                  context={`Interested in: ${cake.title}`}
+                />
+              )}
+
+              {!session && (
+                <Link
+                  href="/auth/signin"
+                  className="block w-full bg-white border-2 border-cake-purple text-cake-purple text-center px-6 py-3 rounded-lg font-medium hover:bg-cake-purple hover:text-white transition"
+                >
+                  Sign In to Message Baker
+                </Link>
+              )}
+            </div>
 
             {/* Baker Info */}
             <div className="border-t pt-6">

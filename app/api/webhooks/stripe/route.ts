@@ -44,22 +44,8 @@ export async function POST(request: NextRequest) {
         })
 
         console.log('✅ Course enrollment created for session:', session.id)
-      } else {
-        // Legacy: Create an inquiry (will be replaced by direct order creation)
-        await prisma.inquiry.create({
-          data: {
-            customerId: session.metadata!.customerId,
-            bakerProfileId: session.metadata!.bakerId,
-            customerName: session.metadata!.customerName,
-            customerEmail: session.customer_email || session.metadata!.customerEmail || '',
-            customerPhone: session.metadata!.customerPhone,
-            message: session.metadata!.message,
-            status: 'CONTACTED',
-          },
-        })
-
-        console.log('✅ Inquiry created for checkout session:', session.id)
       }
+      // Note: Cake orders are handled by /api/complete-order route which creates Order records
     } catch (error) {
       console.error('Error processing checkout session:', error)
     }
