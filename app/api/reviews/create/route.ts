@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
     const review = await prisma.review.create({
       data: {
         orderId,
+        userId: session.user.id,
         rating: parseInt(rating),
         comment: comment.trim(),
         photos: photos || []
