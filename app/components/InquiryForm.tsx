@@ -43,17 +43,17 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
         }),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session')
-      }
-
       const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.details || data.error || 'Failed to create checkout session')
+      }
 
       // Redirect to Stripe checkout
       window.location.href = data.url
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout:', error)
-      alert('Failed to proceed to checkout. Please try again.')
+      alert(`Failed to proceed to checkout: ${error.message}`)
       setLoading(false)
     }
   }
