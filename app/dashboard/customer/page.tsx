@@ -37,7 +37,7 @@ export default async function CustomerDashboard() {
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Welcome back, {session.user.email}!
         </h1>
-        <p className="text-gray-600">Track your cake inquiries and discover new bakers</p>
+        <p className="text-gray-600">Track your cake orders and discover new bakers</p>
       </div>
 
       {/* Quick Actions */}

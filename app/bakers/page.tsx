@@ -15,7 +15,6 @@ interface Baker {
   }
   _count: {
     cakeListings: number
-    inquiries: number
   }
 }
 
@@ -116,7 +115,6 @@ export default function BakersPage() {
                   {/* Stats */}
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>{baker._count.cakeListings} cakes</span>
-                    <span>{baker._count.inquiries} inquiries</span>
                     <span>Delivers {baker.deliveryRadius} miles</span>
                   </div>
                 </div>

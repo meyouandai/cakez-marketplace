@@ -40,7 +40,6 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
       _count: {
         select: {
           cakeListings: true,
-          inquiries: true,
           orders: true
         }
       }

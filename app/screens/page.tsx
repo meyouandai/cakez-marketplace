@@ -83,8 +83,8 @@ export default function ScreensPage() {
             <Link href="/dashboard/baker/orders" className="block text-cake-pink hover:text-cake-purple font-medium">
               → Manage Orders (Accept, Track Status, Complete)
             </Link>
-            <Link href="/dashboard/baker/inquiries" className="block text-cake-pink hover:text-cake-purple font-medium">
-              → View Customer Inquiries
+            <Link href="/messages" className="block text-cake-pink hover:text-cake-purple font-medium">
+              → Messages (Chat with customers)
             </Link>
             <Link href="/dashboard/courses" className="block text-cake-pink hover:text-cake-purple font-medium">
               → My Courses (Same as customer - earn certifications)
