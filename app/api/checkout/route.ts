@@ -78,6 +78,9 @@ export async function POST(request: NextRequest) {
 
     const data = await stripeResponse.json()
 
+    console.log('Stripe response status:', stripeResponse.status)
+    console.log('Stripe response data:', JSON.stringify(data, null, 2))
+
     if (!stripeResponse.ok) {
       console.error('Stripe API error:', data)
       return NextResponse.json(
@@ -86,6 +89,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!data.url) {
+      console.error('No URL in Stripe response:', data)
+      return NextResponse.json(
+        { error: 'Stripe did not return a checkout URL', details: JSON.stringify(data) },
+        { status: 500 }
+      )
+    }
+
+    console.log('Successfully created checkout session with URL:', data.url)
     return NextResponse.json({ url: data.url })
   } catch (error: any) {
     console.error('Checkout error:', error)

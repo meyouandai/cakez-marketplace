@@ -45,10 +45,18 @@ export default function InquiryForm({ cakeId, bakerId, bakerName, cakeTitle }: I
 
       const data = await response.json()
 
+      console.log('Checkout response:', data)
+
       if (!response.ok) {
         throw new Error(data.details || data.error || 'Failed to create checkout session')
       }
 
+      if (!data.url) {
+        console.error('No URL in response:', data)
+        throw new Error('Not a valid URL')
+      }
+
+      console.log('Redirecting to:', data.url)
       // Redirect to Stripe checkout
       window.location.href = data.url
     } catch (error: any) {
