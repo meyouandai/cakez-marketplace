@@ -7,3 +7,11 @@ node_modules
 # Environment variables
 .env*
 !.env.example
+
+# Next.js build output
+.next/
+out/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
