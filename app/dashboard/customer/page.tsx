@@ -11,7 +11,7 @@ export default async function CustomerDashboard() {
     redirect('/auth/signin')
   }
 
-  const inquiries = await prisma.inquiry.findMany({
+  const orders = await prisma.order.findMany({
     where: { customerId: session.user.id },
     include: {
       baker: {
@@ -19,7 +19,14 @@ export default async function CustomerDashboard() {
           businessName: true,
           location: true
         }
-      }
+      },
+      cake: {
+        select: {
+          title: true,
+          images: true
+        }
+      },
+      review: true
     },
     orderBy: { createdAt: 'desc' }
   })
@@ -52,22 +59,22 @@ export default async function CustomerDashboard() {
         </Link>
 
         <div className="bg-gradient-to-r from-cake-mint to-cake-yellow text-white p-6 rounded-lg">
-          <h3 className="font-semibold text-lg mb-2">📬 Your Inquiries</h3>
-          <p className="text-3xl font-bold">{inquiries.length}</p>
+          <h3 className="font-semibold text-lg mb-2">🎂 Your Orders</h3>
+          <p className="text-3xl font-bold">{orders.length}</p>
         </div>
       </div>
 
-      {/* Inquiries List */}
+      {/* Orders List */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">Your Inquiries</h2>
+          <h2 className="text-xl font-semibold">Your Orders</h2>
         </div>
 
-        {inquiries.length === 0 ? (
+        {orders.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🎂</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No inquiries yet</h3>
-            <p className="text-gray-600 mb-6">Start browsing cakes and contact bakers to get started!</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
+            <p className="text-gray-600 mb-6">Start browsing cakes and place your first order!</p>
             <Link
               href="/browse"
               className="inline-block bg-gradient-to-r from-cake-pink to-cake-purple text-white px-6 py-2 rounded-lg font-medium hover:opacity-90"
@@ -77,43 +84,70 @@ export default async function CustomerDashboard() {
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {inquiries.map((inquiry) => (
-              <div key={inquiry.id} className="p-6 hover:bg-gray-50">
+            {orders.map((order) => (
+              <div key={order.id} className="p-6 hover:bg-gray-50">
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {inquiry.baker.businessName}
-                    </h3>
-                    <p className="text-sm text-gray-600">📍 {inquiry.baker.location}</p>
+                  <div className="flex gap-4">
+                    {order.cake.images[0] && (
+                      <img
+                        src={order.cake.images[0]}
+                        alt={order.cake.title}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                    )}
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-900">
+                        {order.cake.title}
+                      </h3>
+                      <p className="text-sm text-gray-600">From {order.baker.businessName}</p>
+                      <p className="text-sm text-gray-600">📍 {order.baker.location}</p>
+                    </div>
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    inquiry.status === 'NEW' ? 'bg-yellow-100 text-yellow-800' :
-                    inquiry.status === 'CONTACTED' ? 'bg-blue-100 text-blue-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {inquiry.status}
-                  </span>
+                  <div className="text-right">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                      order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      order.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-800' :
+                      order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {order.status}
+                    </span>
+                    <p className="text-lg font-bold text-gray-900 mt-2">£{order.totalAmount.toFixed(2)}</p>
+                  </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4 mb-3">
-                  <p className="text-sm text-gray-700 mb-2">
-                    <strong>Your message:</strong>
-                  </p>
-                  <p className="text-sm text-gray-600">{inquiry.message}</p>
-                </div>
+                {order.specialRequests && (
+                  <div className="bg-gray-50 rounded-lg p-4 mb-3">
+                    <p className="text-sm text-gray-700 mb-1">
+                      <strong>Special requests:</strong>
+                    </p>
+                    <p className="text-sm text-gray-600">{order.specialRequests}</p>
+                  </div>
+                )}
 
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between text-sm mt-3">
                   <div className="text-gray-500">
-                    Sent on {new Date(inquiry.createdAt).toLocaleDateString('en-GB', {
+                    Ordered on {new Date(order.createdAt).toLocaleDateString('en-GB', {
                       day: '2-digit',
                       month: 'long',
                       year: 'numeric'
                     })}
                   </div>
-                  <div className="text-gray-600">
-                    Contact: {inquiry.customerEmail}
-                    {inquiry.customerPhone && ` • ${inquiry.customerPhone}`}
-                  </div>
+                  {order.status === 'COMPLETED' && !order.review && (
+                    <Link
+                      href={`/orders/${order.id}/review`}
+                      className="text-cake-pink hover:text-cake-purple font-medium"
+                    >
+                      Leave a Review →
+                    </Link>
+                  )}
+                  {order.review && (
+                    <div className="text-gray-600 flex items-center gap-1">
+                      <span className="text-yellow-500">{'★'.repeat(order.review.rating)}</span>
+                      <span>Your review</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -121,10 +155,10 @@ export default async function CustomerDashboard() {
         )}
       </div>
 
-      {inquiries.length > 0 && (
+      {orders.length > 0 && (
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
-            <strong>💡 Tip:</strong> Bakers will contact you via email or phone. Check your inbox regularly for responses!
+            <strong>💡 Tip:</strong> Bakers will contact you via email to confirm details and arrange delivery!
           </p>
         </div>
       )}
