@@ -95,6 +95,19 @@ export default async function AdminDashboard() {
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
+            href="/dashboard/admin/support"
+            className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-cake-purple hover:bg-gray-50 transition relative"
+          >
+            {pendingVerifications > 0 && (
+              <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                !
+              </span>
+            )}
+            <span className="text-4xl mb-2">💬</span>
+            <span className="font-medium">Support Tickets</span>
+          </Link>
+
+          <Link
             href="/dashboard/admin/courses"
             className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-cake-purple hover:bg-gray-50 transition"
           >

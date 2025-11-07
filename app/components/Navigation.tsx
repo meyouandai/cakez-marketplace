@@ -66,6 +66,9 @@ export default function Navigation() {
                 <Link href="/dashboard/courses" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
                   My Courses
                 </Link>
+                <Link href="/support" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+                  Support
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="bg-gradient-to-r from-cake-pink to-cake-purple text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90"
@@ -146,6 +149,9 @@ export default function Navigation() {
                 </Link>
                 <Link href="/dashboard/courses" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
                   My Courses
+                </Link>
+                <Link href="/support" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+                  Support
                 </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}

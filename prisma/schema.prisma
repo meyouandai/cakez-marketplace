@@ -377,9 +377,12 @@ model TrustBadge {
 
 // Conversations between users
 model Conversation {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String             @id @default(cuid())
+  type        ConversationType   @default(DIRECT)
+  subject     String?            // For support conversations
+  status      String?            // For support: OPEN, IN_PROGRESS, RESOLVED
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   // Relations
   participants ConversationParticipant[]
@@ -450,4 +453,9 @@ enum CourseType {
   SAFEBAKE_HYGIENE
   CAKEZ_ACADEMY
   EXPERT_MASTERCLASS
+}
+
+enum ConversationType {
+  DIRECT    // Direct message between users
+  SUPPORT   // Support ticket to admin
 }
