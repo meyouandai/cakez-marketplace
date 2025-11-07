@@ -187,7 +187,7 @@ export default function ConversationView({ conversationId, messages: initialMess
   }
 
   return (
-    <div className="bg-white rounded-b-lg shadow flex flex-col" style={{ height: '600px' }}>
+    <div className="bg-white flex flex-col h-full">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {messages.length === 0 ? (
