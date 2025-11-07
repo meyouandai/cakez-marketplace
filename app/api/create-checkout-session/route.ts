@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const successUrl = `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${origin}/cakes/${cakeId}`
 
-    const formData = new URLSearchParams({
+    const formDataParams: Record<string, string> = {
       'mode': 'payment',
       'payment_method_types[]': 'card',
       'line_items[0][price_data][currency]': 'gbp',
@@ -64,11 +64,17 @@ export async function POST(request: NextRequest) {
       'line_items[0][quantity]': '1',
       'success_url': successUrl,
       'cancel_url': cancelUrl,
-      'customer_email': session.user.email,
       'metadata[cakeId]': cake.id,
       'metadata[bakerId]': cake.baker.id,
       'metadata[customerId]': session.user.id,
-    })
+    }
+
+    // Add customer email if available
+    if (session.user.email) {
+      formDataParams['customer_email'] = session.user.email
+    }
+
+    const formData = new URLSearchParams(formDataParams)
 
     const stripeResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
