@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import NewsletterSubscribe from '@/app/components/NewsletterSubscribe'
 
 export default function Home() {
   return (
@@ -127,6 +128,13 @@ export default function Home() {
               <div className="text-gray-600">Average Rating</div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <NewsletterSubscribe />
         </div>
       </section>
 
