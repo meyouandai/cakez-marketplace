@@ -1,15 +1,9 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/lib/auth'
-import { redirect } from 'next/navigation'
+import { requireRole } from '@/app/lib/auth-helpers'
 import { prisma } from '@/app/lib/prisma'
 import Link from 'next/link'
 
 export default async function CustomerDashboard() {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    redirect('/auth/signin')
-  }
+  const session = await requireRole('CUSTOMER')
 
   const orders = await prisma.order.findMany({
     where: { customerId: session.user.id },
