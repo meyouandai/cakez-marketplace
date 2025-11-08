@@ -104,6 +104,6 @@ export const config = {
      * - public files (images, etc.)
      * - sentry-example-page (Sentry test page)
      */
-    '/((?!api/auth|api/test-sentry|_next/static|_next/image|favicon.ico|sentry-example-page|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$).*)',
+    '/((?!api/auth|api/test-sentry|_next/static|_next/image|favicon.ico|sentry-example-page|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.svg$|.*\\.html$).*)',
   ],
 }
