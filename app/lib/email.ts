@@ -1,6 +1,17 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialization - only create Resend client when API key is available
+let resend: Resend | null = null
+
+function getResendClient() {
+  if (!process.env.RESEND_API_KEY) {
+    return null
+  }
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export interface EmailOptions {
   to: string
@@ -13,8 +24,10 @@ export interface EmailOptions {
  */
 export async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
+    const resendClient = getResendClient()
+
     // If no Resend API key is configured, log the email instead
-    if (!process.env.RESEND_API_KEY) {
+    if (!resendClient) {
       console.log('📧 Email would be sent (Resend not configured):')
       console.log('To:', to)
       console.log('Subject:', subject)
@@ -22,7 +35,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
       return { success: true, message: 'Email logged (Resend not configured)' }
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resendClient.emails.send({
       from: process.env.FROM_EMAIL || 'noreply@cakez.co.uk',
       to,
       subject,
