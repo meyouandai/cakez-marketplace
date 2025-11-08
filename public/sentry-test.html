@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Sentry Test - Standalone</title>
+  <script src="https://browser.sentry-cdn.com/8.0.0/bundle.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    button {
+      background: #8b5cf6;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      margin: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f0f0f0;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sentry Test - Standalone</h1>
+  <p>This page is completely independent of Next.js auth and routing.</p>
+
+  <div id="status"></div>
+
+  <button onclick="testError()">Test 1: Send Error</button>
+  <button onclick="testMessage()">Test 2: Send Message</button>
+
+  <div id="result" class="result" style="display:none;"></div>
+
+  <script>
+    // Initialize Sentry
+    Sentry.init({
+      dsn: 'https://589c4a334c73b5f180e30be1bf89b3f9@o4510325184200704.ingest.de.sentry.io/4510325186035792',
+      tracesSampleRate: 1.0,
+    });
+
+    document.getElementById('status').innerHTML = '<p style="color: green;">✅ Sentry Initialized</p>';
+
+    function testError() {
+      try {
+        throw new Error('Standalone Test Error - from static HTML page');
+      } catch (error) {
+        const eventId = Sentry.captureException(error);
+        showResult('Error sent! Event ID: ' + eventId);
+      }
+    }
+
+    function testMessage() {
+      const eventId = Sentry.captureMessage('Standalone Test Message - Hello from static page! 👋', 'info');
+      showResult('Message sent! Event ID: ' + eventId);
+    }
+
+    function showResult(text) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<strong>✅ Success!</strong><br>' + text + '<br><br>Check your Sentry dashboard: <a href="https://overflo-digital.sentry.io/issues/" target="_blank">https://overflo-digital.sentry.io/issues/</a>';
+    }
+  </script>
+</body>
+</html>
