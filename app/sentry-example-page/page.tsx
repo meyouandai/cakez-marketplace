@@ -1,10 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as Sentry from '@sentry/nextjs'
 
 export default function SentryExamplePage() {
   const [eventId, setEventId] = useState<string | null>(null)
+  const [hasDSN, setHasDSN] = useState(false)
+  const [env, setEnv] = useState('')
+
+  useEffect(() => {
+    // Set environment variables on client side only to avoid hydration issues
+    setHasDSN(!!process.env.NEXT_PUBLIC_SENTRY_DSN)
+    setEnv(process.env.NODE_ENV || 'development')
+  }, [])
 
   const throwError = () => {
     try {
@@ -44,12 +52,12 @@ export default function SentryExamplePage() {
           <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <h2 className="font-semibold text-blue-900 mb-2">Status</h2>
             <p className="text-sm text-blue-700">
-              {process.env.NEXT_PUBLIC_SENTRY_DSN
+              {hasDSN
                 ? '✅ Sentry DSN configured'
                 : '⚠️ Sentry DSN not configured'}
             </p>
             <p className="text-xs text-blue-600 mt-1">
-              Environment: {process.env.NODE_ENV}
+              Environment: {env}
             </p>
           </div>
 
