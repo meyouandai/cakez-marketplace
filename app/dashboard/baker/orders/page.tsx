@@ -156,7 +156,15 @@ export default async function BakerOrdersPage() {
                   </div>
                 )}
 
-                <OrderManagementRow orderId={order.id} currentStatus={order.status} />
+                <div className="flex gap-2">
+                  <OrderManagementRow orderId={order.id} currentStatus={order.status} />
+                  <Link
+                    href={`/messages?userId=${order.customerId}&orderId=${order.id}`}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
+                  >
+                    💬 Send Message
+                  </Link>
+                </div>
 
                 {order.review && (
                   <div className="mt-4 pt-4 border-t">

@@ -11,7 +11,8 @@ export default async function CustomerDashboard() {
       baker: {
         select: {
           businessName: true,
-          location: true
+          location: true,
+          userId: true
         }
       },
       cake: {
@@ -128,20 +129,28 @@ export default async function CustomerDashboard() {
                       year: 'numeric'
                     })}
                   </div>
-                  {order.status === 'COMPLETED' && !order.review && (
+                  <div className="flex items-center gap-3">
                     <Link
-                      href={`/orders/${order.id}/review`}
-                      className="text-cake-pink hover:text-cake-purple font-medium"
+                      href={`/messages?userId=${order.baker.userId}&orderId=${order.id}`}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition text-sm"
                     >
-                      Leave a Review →
+                      💬 Send Message
                     </Link>
-                  )}
-                  {order.review && (
-                    <div className="text-gray-600 flex items-center gap-1">
-                      <span className="text-yellow-500">{'★'.repeat(order.review.rating)}</span>
-                      <span>Your review</span>
-                    </div>
-                  )}
+                    {order.status === 'COMPLETED' && !order.review && (
+                      <Link
+                        href={`/orders/${order.id}/review`}
+                        className="text-cake-pink hover:text-cake-purple font-medium"
+                      >
+                        Leave a Review →
+                      </Link>
+                    )}
+                    {order.review && (
+                      <div className="text-gray-600 flex items-center gap-1">
+                        <span className="text-yellow-500">{'★'.repeat(order.review.rating)}</span>
+                        <span>Your review</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
