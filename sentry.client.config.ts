@@ -30,8 +30,9 @@ Sentry.init({
 
   // Filter out sensitive errors
   beforeSend(event, hint) {
-    // Allow test errors from Sentry test page even in development
-    if (event.request?.url?.includes('/sentry-example-page')) {
+    // Allow test errors from Sentry test page and API even in development
+    if (event.request?.url?.includes('/sentry-example-page') ||
+        event.request?.url?.includes('/api/test-sentry')) {
       return event
     }
 
