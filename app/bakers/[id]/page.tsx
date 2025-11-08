@@ -35,6 +35,8 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
         price: 25.99,
         images: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'],
         active: true,
+        urgencyFlag: false,
+        freshIndicator: true,
         baker: {
           id: params.id,
           businessName: 'Sweet Sarah\'s Bakery',
@@ -54,6 +56,8 @@ export default async function BakerProfilePage({ params }: BakerProfilePageProps
         price: 150.00,
         images: ['https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=500'],
         active: true,
+        urgencyFlag: false,
+        freshIndicator: false,
         baker: {
           id: params.id,
           businessName: 'Sweet Sarah\'s Bakery',
