@@ -4,9 +4,15 @@ import { authOptions } from '@/app/lib/auth'
 import { prisma } from '@/app/lib/prisma'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil',
-})
+// Lazy initialization to prevent build errors when Stripe key is not configured
+function getStripeClient() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables.')
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-05-28.basil',
+  })
+}
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -63,6 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe checkout session
+    const stripe = getStripeClient()
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
