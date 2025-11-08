@@ -29,9 +29,21 @@ export default function Navigation() {
             <Link href="/bakers" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
               Find Bakers
             </Link>
+            <Link href="/design" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+              Design Cake
+            </Link>
+            <Link href="/academy" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+              Academy
+            </Link>
+            <Link href="/community" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+              Community
+            </Link>
 
             {status === 'authenticated' ? (
               <>
+                <Link href="/designs" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
+                  My Designs
+                </Link>
                 {session.user.role === 'BAKER' && (
                   <>
                     <Link href="/dashboard/baker" className="text-gray-700 hover:text-cake-purple px-3 py-2 rounded-md text-sm font-medium">
@@ -96,8 +108,20 @@ export default function Navigation() {
             <Link href="/bakers" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
               Find Bakers
             </Link>
+            <Link href="/design" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+              Design Cake
+            </Link>
+            <Link href="/academy" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+              Academy
+            </Link>
+            <Link href="/community" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+              Community
+            </Link>
             {status === 'authenticated' ? (
               <>
+                <Link href="/designs" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
+                  My Designs
+                </Link>
                 {session.user.role === 'BAKER' && (
                   <>
                     <Link href="/dashboard/baker" className="text-gray-700 hover:text-cake-purple block px-3 py-2 rounded-md text-base font-medium">
