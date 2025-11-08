@@ -4,3 +4,14 @@ node_modules
 
 /app/generated/prisma
 .vercel
+# Environment variables
+.env*
+!.env.example
+
+# Next.js build output
+.next/
+out/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts

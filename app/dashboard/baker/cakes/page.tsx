@@ -23,8 +23,10 @@ export default async function BakerCakesPage() {
   const cakes = await prisma.cakeListing.findMany({
     where: { bakerId: bakerProfile.id },
     include: {
-      _count: {
-        select: { orders: true }
+      categoryRelation: {
+        select: {
+          name: true
+        }
       }
     },
     orderBy: { createdAt: 'desc' }
@@ -81,8 +83,10 @@ export default async function BakerCakesPage() {
                 <h3 className="font-semibold text-lg mb-1">{cake.title}</h3>
                 <p className="text-gray-600 text-sm mb-2 line-clamp-2">{cake.description}</p>
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-2xl font-bold text-cake-purple">£{cake.price}</span>
-                  <span className="text-sm text-gray-500">{cake._count.orders} orders</span>
+                  <span className="text-2xl font-bold text-cake-purple">£{cake.price.toFixed(2)}</span>
+                  {cake.active && (
+                    <span className="text-sm text-green-600 font-medium">Active</span>
+                  )}
                 </div>
                 
                 <div className="flex gap-2">

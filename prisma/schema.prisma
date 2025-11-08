@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// CORE MODELS
+// ============================================
+
 // Core User Model
 model User {
   id                String    @id @default(cuid())
@@ -19,6 +23,10 @@ model User {
   emailVerified     DateTime?
   verificationStatus VerificationStatus @default(UNVERIFIED)
   responseTimeAvg   Float?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -36,6 +44,8 @@ model User {
   verifications     Verification[]
   trustBadges       TrustBadge[]
   contentPages      ContentPage[]
+  sentMessages      Message[]
+  conversations     ConversationParticipant[]
 }
 
 // Baker Profile
@@ -56,13 +66,17 @@ model BakerProfile {
   updatedAt           DateTime @updatedAt
 
   // Relations
-  user               User          @relation(fields: [userId], references: [id])
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   cakeListings       CakeListing[]
   orders             Order[]
   bakerResponses     BakerResponse[]
   responseTracking   ResponseTracking?
   courses            Course[]
 }
+
+// ============================================
+// MARKETPLACE MODELS
+// ============================================
 
 // Cake Listings
 model CakeListing {
@@ -81,7 +95,7 @@ model CakeListing {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  baker           BakerProfile @relation(fields: [bakerId], references: [id])
+  baker           BakerProfile @relation(fields: [bakerId], references: [id], onDelete: Cascade)
   orders          Order[]
   categoryRelation Category     @relation(fields: [category], references: [id])
 }
@@ -97,7 +111,11 @@ model Category {
   cakeListings CakeListing[]
 }
 
-// Orders
+// ============================================
+// ORDER & REVIEW MODELS
+// ============================================
+
+// Orders (Replaces simple Inquiry for paid orders)
 model Order {
   id              String      @id @default(cuid())
   customerId      String
@@ -105,16 +123,17 @@ model Order {
   cakeId          String
   status          OrderStatus @default(PENDING)
   totalAmount     Float
-  deliveryDate    DateTime
-  deliveryAddress String
+  deliveryDate    DateTime?
+  deliveryAddress String?
   specialRequests String?     @db.Text
   insuranceCovered Boolean    @default(false)
+  stripeSessionId String?     // Link to Stripe payment
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
   // Relations
-  customer        User         @relation(fields: [customerId], references: [id])
-  baker           BakerProfile @relation(fields: [bakerId], references: [id])
+  customer        User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  baker           BakerProfile @relation(fields: [bakerId], references: [id], onDelete: Cascade)
   cake            CakeListing  @relation(fields: [cakeId], references: [id])
   review          Review?
 }
@@ -129,10 +148,14 @@ model Review {
   createdAt DateTime @default(now())
 
   // Relations
-  order     Order    @relation(fields: [orderId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
 }
+
+// ============================================
+// DISCOVERY & MATCHING MODELS
+// ============================================
 
 // Saved Searches
 model SavedSearch {
@@ -143,13 +166,14 @@ model SavedSearch {
   createdAt      DateTime @default(now())
 
   // Relations
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Buyer Requests
+// Buyer Requests (Customers post requirements, bakers respond)
 model BuyerRequest {
   id          String   @id @default(cuid())
   customerId  String
+  title       String
   description String   @db.Text
   location    String
   urgency     String
@@ -158,23 +182,28 @@ model BuyerRequest {
   createdAt   DateTime @default(now())
 
   // Relations
-  customer    User           @relation(fields: [customerId], references: [id])
+  customer    User           @relation(fields: [customerId], references: [id], onDelete: Cascade)
   responses   BakerResponse[]
 }
 
 // Baker Responses to Buyer Requests
 model BakerResponse {
-  id          String   @id @default(cuid())
-  requestId   String
-  bakerId     String
-  message     String   @db.Text
-  quotedPrice Float
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  requestId     String
+  bakerId       String
+  message       String   @db.Text
+  proposedPrice Float
+  deliveryTime  String
+  createdAt     DateTime @default(now())
 
   // Relations
-  request     BuyerRequest @relation(fields: [requestId], references: [id])
-  baker       BakerProfile @relation(fields: [bakerId], references: [id])
+  request       BuyerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  baker         BakerProfile @relation(fields: [bakerId], references: [id], onDelete: Cascade)
 }
+
+// ============================================
+// CONTENT & COMMUNITY MODELS
+// ============================================
 
 // Newsletter
 model Newsletter {
@@ -194,7 +223,7 @@ model NewsletterSubscription {
   createdAt DateTime @default(now())
 
   // Relations
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // Content Management
@@ -209,8 +238,12 @@ model ContentPage {
   updatedAt DateTime @updatedAt
 
   // Relations
-  author    User     @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }
+
+// ============================================
+// TRAINING & COURSES MODELS
+// ============================================
 
 // Training & Courses
 model Course {
@@ -221,10 +254,15 @@ model Course {
   courseType        CourseType
   instructorId      String?
   certificationLevel String?
+  duration          String?
+  syllabus          String?    @db.Text
+  prerequisites     String?
+  videoUrl          String?
+  materialUrl       String?
   createdAt         DateTime   @default(now())
 
   // Relations
-  instructor        BakerProfile?      @relation(fields: [instructorId], references: [id])
+  instructor        BakerProfile?      @relation(fields: [instructorId], references: [id], onDelete: SetNull)
   enrollments       CourseEnrollment[]
 }
 
@@ -232,13 +270,15 @@ model CourseEnrollment {
   id            String    @id @default(cuid())
   userId        String
   courseId      String
+  progress      Int       @default(0)
+  enrolledAt    DateTime  @default(now())
   completedAt   DateTime?
   certificateUrl String?
   createdAt     DateTime  @default(now())
 
   // Relations
-  user          User      @relation(fields: [userId], references: [id])
-  course        Course    @relation(fields: [courseId], references: [id])
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseId])
 }
@@ -252,8 +292,12 @@ model Certification {
   badgeVisible     Boolean  @default(true)
 
   // Relations
-  user             User     @relation(fields: [userId], references: [id])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+// ============================================
+// BUSINESS SERVICES MODELS
+// ============================================
 
 // Business Services & Referrals
 model Referral {
@@ -266,7 +310,7 @@ model Referral {
   createdAt     DateTime @default(now())
 
   // Relations
-  user          User     @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model InsurancePolicy {
@@ -280,7 +324,7 @@ model InsurancePolicy {
   createdAt      DateTime @default(now())
 
   // Relations
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ShippingKit {
@@ -292,18 +336,28 @@ model ShippingKit {
   createdAt   DateTime @default(now())
 }
 
+// ============================================
+// TRUST & VERIFICATION MODELS
+// ============================================
+
 // Trust & Verification
 model Verification {
-  id          String             @id @default(cuid())
-  userId      String
-  documentUrl String
-  status      VerificationStatus @default(PENDING)
-  reviewedAt  DateTime?
-  verifiedBy  String?
-  createdAt   DateTime           @default(now())
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  status              VerificationStatus @default(PENDING)
+  submittedDate       DateTime           @default(now())
+  businessLicense     String?
+  insurancePolicy     String?
+  hygieneCertificate  String?
+  idDocument          String?
+  additionalInfo      String?            @db.Text
+  reviewedBy          String?
+  reviewNotes         String?            @db.Text
+  verifiedDate        DateTime?
+  createdAt           DateTime           @default(now())
 
   // Relations
-  user        User               @relation(fields: [userId], references: [id])
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ResponseTracking {
@@ -313,7 +367,7 @@ model ResponseTracking {
   lastUpdated     DateTime @updatedAt
 
   // Relations
-  baker           BakerProfile @relation(fields: [bakerId], references: [id])
+  baker           BakerProfile @relation(fields: [bakerId], references: [id], onDelete: Cascade)
 }
 
 model TrustBadge {
@@ -324,10 +378,66 @@ model TrustBadge {
   visible     Boolean  @default(true)
 
   // Relations
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Enums
+// ============================================
+// MESSAGING SYSTEM
+// ============================================
+
+// Conversations between users
+model Conversation {
+  id          String             @id @default(cuid())
+  type        ConversationType   @default(DIRECT)
+  subject     String?            // For support conversations
+  status      String?            // For support: OPEN, IN_PROGRESS, RESOLVED
+  deletedAt   DateTime?          // Soft delete timestamp
+  deletedBy   String?            // User who initiated delete
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  // Relations
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+// Track who's in each conversation
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  lastReadAt     DateTime?
+  archived       Boolean  @default(false)
+  archivedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+// Individual messages
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String   @db.Text
+  read           Boolean  @default(false)
+  deletedAt      DateTime?          // Soft delete timestamp
+  deletedBy      String?            // User who deleted it
+  createdAt      DateTime @default(now())
+
+  // Relations
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
 enum UserRole {
   CUSTOMER
   BAKER
@@ -359,4 +469,9 @@ enum CourseType {
   SAFEBAKE_HYGIENE
   CAKEZ_ACADEMY
   EXPERT_MASTERCLASS
+}
+
+enum ConversationType {
+  DIRECT    // Direct message between users
+  SUPPORT   // Support ticket to admin
 }

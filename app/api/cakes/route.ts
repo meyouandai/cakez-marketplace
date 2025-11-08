@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
 import { z } from 'zod'
+import prisma from '@/app/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,66 +11,87 @@ const cakeSchema = z.object({
   description: z.string().min(10),
   price: z.number().positive(),
   category: z.string(),
-  images: z.array(z.string().url()).min(1),
-  bulkPricing: z.object({
-    enabled: z.boolean(),
-    tiers: z.array(z.object({
-      quantity: z.number().positive(),
-      discount: z.number().min(0).max(100)
-    }))
-  }).optional()
+  images: z.array(z.string().url()).min(1)
 })
 
 // GET /api/cakes - Search and filter cakes
 export async function GET(request: NextRequest) {
   try {
-    // Return demo cake data for now
-    const demoCakes = [
-      {
-        id: 'demo-cake-1',
-        title: 'Classic Chocolate Birthday Cake',
-        description: 'Rich chocolate sponge with chocolate buttercream frosting. Perfect for birthday celebrations.',
-        price: 25.99,
-        images: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'],
-        baker: {
-          id: 'demo-baker-1',
-          businessName: 'Sweet Sarah\'s Bakery',
-          location: 'London',
-          user: {
-            verificationStatus: 'VERIFIED'
-          }
-        },
-        _count: {
-          orders: 5
-        }
-      },
-      {
-        id: 'demo-cake-2',
-        title: 'Vanilla Cupcakes (Box of 12)',
-        description: 'Fluffy vanilla cupcakes topped with smooth vanilla buttercream. Perfect for parties.',
-        price: 18.50,
-        images: ['https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?w=500'],
-        baker: {
-          id: 'demo-baker-2',
-          businessName: 'Chocolate Dreams',
-          location: 'Manchester',
-          user: {
-            verificationStatus: 'VERIFIED'
-          }
-        },
-        _count: {
-          orders: 3
-        }
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '12')
+    const search = searchParams.get('search') || ''
+    const category = searchParams.get('category') || ''
+    const minPrice = searchParams.get('minPrice')
+    const maxPrice = searchParams.get('maxPrice')
+    const location = searchParams.get('location') || ''
+
+    const skip = (page - 1) * limit
+
+    // Build where clause
+    const where: any = {
+      active: true,
+    }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    if (category) {
+      where.category = category
+    }
+
+    if (minPrice || maxPrice) {
+      where.price = {}
+      if (minPrice) where.price.gte = parseFloat(minPrice)
+      if (maxPrice) where.price.lte = parseFloat(maxPrice)
+    }
+
+    if (location) {
+      where.baker = {
+        location: { contains: location, mode: 'insensitive' }
       }
-    ]
+    }
+
+    // Fetch cakes with baker info
+    const [cakes, total] = await Promise.all([
+      prisma.cakeListing.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          baker: {
+            select: {
+              id: true,
+              businessName: true,
+              location: true,
+              featured: true,
+            }
+          },
+          categoryRelation: {
+            select: {
+              name: true,
+            }
+          }
+        },
+        orderBy: [
+          { baker: { featured: 'desc' } },
+          { createdAt: 'desc' }
+        ]
+      }),
+      prisma.cakeListing.count({ where })
+    ])
 
     return NextResponse.json({
-      cakes: demoCakes,
+      cakes,
       pagination: {
-        page: 1,
-        limit: 12,
-        total: 2,
-        totalPages: 1
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     })
   } catch (error) {
@@ -85,10 +107,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session || session.user.role !== 'BAKER') {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - Baker account required' },
         { status: 401 }
       )
     }
@@ -103,13 +125,43 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Return demo created cake
-    const cake = {
-      id: 'demo-new-cake',
-      ...validation.data,
-      bakerId: 'demo-baker-id',
-      createdAt: new Date().toISOString()
+    // Find baker profile for this user
+    const bakerProfile = await prisma.bakerProfile.findUnique({
+      where: { userId: session.user.id }
+    })
+
+    if (!bakerProfile) {
+      return NextResponse.json(
+        { error: 'Baker profile not found. Please create your profile first.' },
+        { status: 404 }
+      )
     }
+
+    // Create cake listing
+    const cake = await prisma.cakeListing.create({
+      data: {
+        title: validation.data.title,
+        description: validation.data.description,
+        price: validation.data.price,
+        category: validation.data.category,
+        images: validation.data.images,
+        bakerId: bakerProfile.id,
+      },
+      include: {
+        baker: {
+          select: {
+            id: true,
+            businessName: true,
+            location: true,
+          }
+        },
+        categoryRelation: {
+          select: {
+            name: true,
+          }
+        }
+      }
+    })
 
     return NextResponse.json(cake, { status: 201 })
   } catch (error) {
