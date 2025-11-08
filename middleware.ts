@@ -27,6 +27,13 @@ export default withAuth(
       path === route || path.startsWith(`${route}/`)
     )
 
+    // Debug logging for sentry page
+    if (path.includes('sentry')) {
+      console.log('[Middleware Debug] Path:', path)
+      console.log('[Middleware Debug] Is Public Route:', isPublicRoute)
+      console.log('[Middleware Debug] Has Token:', !!token)
+    }
+
     if (isPublicRoute) {
       return NextResponse.next()
     }
