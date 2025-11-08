@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { prisma } from '@/app/lib/prisma'
 import CakeCard from '@/app/components/CakeCard'
 
 interface BakerProfilePageProps {
@@ -11,51 +10,67 @@ interface BakerProfilePageProps {
 }
 
 export default async function BakerProfilePage({ params }: BakerProfilePageProps) {
-  const baker = await prisma.bakerProfile.findUnique({
-    where: { id: params.id },
-    include: {
-      user: {
-        select: {
-          email: true,
-          verificationStatus: true,
-          trustBadges: true,
-          _count: {
-            select: {
-              reviews: true
-            }
-          }
-        }
-      },
-      cakeListings: {
-        where: { active: true },
-        include: {
-          baker: {
-            include: {
-              user: {
-                select: {
-                  verificationStatus: true
-                }
-              }
-            }
-          },
-          _count: {
-            select: {
-              orders: true
-            }
-          }
-        }
-      },
+  // Demo baker data
+  const baker = {
+    id: params.id,
+    businessName: 'Sweet Sarah\'s Bakery',
+    location: 'London',
+    description: 'Award-winning artisan bakery specializing in custom celebration cakes. We use only the finest organic ingredients and create each cake with love and attention to detail.',
+    deliveryRadius: 10,
+    quickResponderBadge: true,
+    featured: true,
+    user: {
+      email: 'sarah@sweetbakery.com',
+      verificationStatus: 'VERIFIED',
+      trustBadges: [],
       _count: {
-        select: {
-          orders: true,
-          cakeListings: true
+        reviews: 42
+      }
+    },
+    cakeListings: [
+      {
+        id: 'demo-cake-1',
+        title: 'Classic Chocolate Birthday Cake',
+        description: 'Rich chocolate sponge with chocolate buttercream frosting',
+        price: 25.99,
+        images: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'],
+        active: true,
+        baker: {
+          id: params.id,
+          businessName: 'Sweet Sarah\'s Bakery',
+          location: 'London',
+          user: {
+            verificationStatus: 'VERIFIED'
+          }
+        },
+        _count: {
+          orders: 5
+        }
+      },
+      {
+        id: 'demo-cake-2',
+        title: 'Vanilla Wedding Cake',
+        description: 'Elegant 3-tier vanilla cake with white fondant',
+        price: 150.00,
+        images: ['https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=500'],
+        active: true,
+        baker: {
+          id: params.id,
+          businessName: 'Sweet Sarah\'s Bakery',
+          location: 'London',
+          user: {
+            verificationStatus: 'VERIFIED'
+          }
+        },
+        _count: {
+          orders: 12
         }
       }
+    ],
+    _count: {
+      cakeListings: 8,
+      orders: 45
     }
-  })
-
-  if (!baker) {
-    notFound()
   }
 
   // Calculate average rating (placeholder for now)

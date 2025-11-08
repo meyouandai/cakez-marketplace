@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { prisma } from '@/app/lib/prisma'
 
 interface CakeDetailsPageProps {
   params: {
@@ -10,29 +9,31 @@ interface CakeDetailsPageProps {
 }
 
 export default async function CakeDetailsPage({ params }: CakeDetailsPageProps) {
-  const cake = await prisma.cakeListing.findUnique({
-    where: { id: params.id },
-    include: {
-      baker: {
-        include: {
-          user: {
-            select: {
-              verificationStatus: true
-            }
-          }
-        }
-      },
-      categoryRelation: true,
-      _count: {
-        select: {
-          orders: true
-        }
+  // Demo cake data
+  const cake = {
+    id: params.id,
+    title: 'Classic Chocolate Birthday Cake',
+    description: 'Rich chocolate sponge with chocolate buttercream frosting. Perfect for birthday celebrations. Made with premium Belgian chocolate and organic ingredients.',
+    price: 25.99,
+    images: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'],
+    active: true,
+    urgencyFlag: false,
+    freshIndicator: true,
+    bulkPricing: true,
+    categoryRelation: {
+      name: 'Birthday Cakes'
+    },
+    baker: {
+      id: 'demo-baker-1',
+      businessName: 'Sweet Sarah\'s Bakery',
+      location: 'London',
+      user: {
+        verificationStatus: 'VERIFIED'
       }
+    },
+    _count: {
+      orders: 5
     }
-  })
-
-  if (!cake || !cake.active) {
-    notFound()
   }
 
   return (

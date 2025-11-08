@@ -1,34 +1,44 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/app/lib/prisma'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export default async function BakerCakesPage() {
   const session = await getServerSession(authOptions)
-  
+
   if (!session || session.user.role !== 'BAKER') {
     redirect('/auth/signin')
   }
 
-  const bakerProfile = await prisma.bakerProfile.findUnique({
-    where: { userId: session.user.id }
-  })
-
-  if (!bakerProfile) {
-    redirect('/dashboard/baker/profile')
+  // Demo data - replace with actual database calls when ready
+  const bakerProfile = {
+    id: 'demo-baker-1',
+    userId: session.user.id
   }
 
-  const cakes = await prisma.cakeListing.findMany({
-    where: { bakerId: bakerProfile.id },
-    include: {
-      _count: {
-        select: { orders: true }
-      }
+  const cakes = [
+    {
+      id: 'demo-cake-1',
+      title: 'Classic Chocolate Birthday Cake',
+      description: 'Rich chocolate sponge with chocolate buttercream frosting',
+      price: 25.99,
+      images: ['https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500'],
+      active: true,
+      createdAt: new Date(),
+      _count: { orders: 5 }
     },
-    orderBy: { createdAt: 'desc' }
-  })
+    {
+      id: 'demo-cake-2',
+      title: 'Vanilla Wedding Cake',
+      description: 'Elegant 3-tier vanilla cake with white fondant',
+      price: 150.00,
+      images: ['https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=500'],
+      active: true,
+      createdAt: new Date(),
+      _count: { orders: 12 }
+    }
+  ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

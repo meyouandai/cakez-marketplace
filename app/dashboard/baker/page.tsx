@@ -1,43 +1,47 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/lib/auth'
 import { redirect } from 'next/navigation'
-import { prisma } from '@/app/lib/prisma'
 import Link from 'next/link'
 
 export default async function BakerDashboard() {
   const session = await getServerSession(authOptions)
-  
+
   if (!session || session.user.role !== 'BAKER') {
     redirect('/auth/signin')
   }
 
-  // Check if baker has a profile
-  const bakerProfile = await prisma.bakerProfile.findUnique({
-    where: { userId: session.user.id },
-    include: {
-      _count: {
-        select: {
-          cakeListings: true,
-          orders: true
-        }
-      }
+  // Demo data - replace with actual database calls when ready
+  const bakerProfile = {
+    id: 'demo-baker-1',
+    userId: session.user.id,
+    businessName: 'Sweet Sarah\'s Bakery',
+    _count: {
+      cakeListings: 8,
+      orders: 45
     }
-  })
-
-  if (!bakerProfile) {
-    redirect('/dashboard/baker/profile')
   }
 
-  // Get recent orders
-  const recentOrders = await prisma.order.findMany({
-    where: { bakerId: bakerProfile.id },
-    include: {
-      customer: true,
-      cake: true
+  // Demo recent orders
+  const recentOrders = [
+    {
+      id: 'order-1',
+      customer: { email: 'john@example.com' },
+      cake: { title: 'Chocolate Birthday Cake' },
+      deliveryDate: new Date(Date.now() + 86400000 * 3),
+      status: 'PENDING',
+      totalAmount: 25.99,
+      createdAt: new Date()
     },
-    orderBy: { createdAt: 'desc' },
-    take: 5
-  })
+    {
+      id: 'order-2',
+      customer: { email: 'emma@example.com' },
+      cake: { title: 'Wedding Cake' },
+      deliveryDate: new Date(Date.now() + 86400000 * 7),
+      status: 'ACCEPTED',
+      totalAmount: 150.00,
+      createdAt: new Date()
+    }
+  ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
