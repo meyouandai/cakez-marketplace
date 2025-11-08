@@ -11,10 +11,10 @@ async function listUsers() {
     const users = await prisma.user.findMany({
       select: {
         id: true,
-        name: true,
         email: true,
         role: true,
         emailVerified: true,
+        verificationStatus: true,
         createdAt: true,
         bakerProfile: {
           select: {
@@ -40,9 +40,9 @@ async function listUsers() {
     if (admins.length > 0) {
       console.log('--- ADMINS ---')
       admins.forEach(user => {
-        console.log(`✓ ${user.name || 'No name'}`)
-        console.log(`  Email: ${user.email}`)
+        console.log(`✓ ${user.email}`)
         console.log(`  ID: ${user.id}`)
+        console.log(`  Status: ${user.verificationStatus}`)
         console.log(`  Verified: ${user.emailVerified ? 'Yes' : 'No'}`)
         console.log(`  Created: ${user.createdAt.toLocaleDateString()}\n`)
       })
@@ -51,11 +51,11 @@ async function listUsers() {
     if (bakers.length > 0) {
       console.log('--- BAKERS ---')
       bakers.forEach(user => {
-        console.log(`✓ ${user.name || 'No name'}`)
+        console.log(`✓ ${user.bakerProfile?.businessName || user.email}`)
         console.log(`  Email: ${user.email}`)
-        console.log(`  Business: ${user.bakerProfile?.businessName || 'Not set'}`)
         console.log(`  Location: ${user.bakerProfile?.location || 'Not set'}`)
         console.log(`  ID: ${user.id}`)
+        console.log(`  Status: ${user.verificationStatus}`)
         console.log(`  Verified: ${user.emailVerified ? 'Yes' : 'No'}`)
         console.log(`  Created: ${user.createdAt.toLocaleDateString()}\n`)
       })
@@ -64,9 +64,9 @@ async function listUsers() {
     if (customers.length > 0) {
       console.log('--- CUSTOMERS ---')
       customers.forEach(user => {
-        console.log(`✓ ${user.name || 'No name'}`)
-        console.log(`  Email: ${user.email}`)
+        console.log(`✓ ${user.email}`)
         console.log(`  ID: ${user.id}`)
+        console.log(`  Status: ${user.verificationStatus}`)
         console.log(`  Verified: ${user.emailVerified ? 'Yes' : 'No'}`)
         console.log(`  Created: ${user.createdAt.toLocaleDateString()}\n`)
       })
