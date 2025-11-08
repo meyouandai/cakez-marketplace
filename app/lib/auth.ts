@@ -45,6 +45,7 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             role: user.role,
+            emailVerified: user.emailVerified,
           }
         } catch (error) {
           console.error("Auth error:", error)
@@ -60,6 +61,7 @@ export const authOptions: NextAuthOptions = {
           ...token,
           id: user.id,
           role: user.role,
+          emailVerified: user.emailVerified,
         }
       }
       return token
@@ -71,6 +73,7 @@ export const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.id,
           role: token.role,
+          emailVerified: token.emailVerified,
         }
       }
     }

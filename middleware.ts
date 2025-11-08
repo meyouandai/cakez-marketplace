@@ -46,6 +46,17 @@ export default withAuth(
       return NextResponse.redirect(new URL('/auth/signin', req.url))
     }
 
+    // Check email verification - redirect unverified users to verification notice page
+    const emailVerified = token.emailVerified as boolean | null
+    const verificationExemptRoutes = ['/auth/verify-email', '/auth/signout']
+    const isVerificationExempt = verificationExemptRoutes.some(route =>
+      path === route || path.startsWith(`${route}/`)
+    )
+
+    if (!emailVerified && !isVerificationExempt) {
+      return NextResponse.redirect(new URL('/auth/verify-email?required=true', req.url))
+    }
+
     const role = token.role as string
 
     // Role-based access control
