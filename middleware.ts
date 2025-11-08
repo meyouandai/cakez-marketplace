@@ -19,6 +19,7 @@ export default withAuth(
       '/insurance',
       '/shipping-kits',
       '/support',
+      '/sentry-example-page',
     ]
 
     // Check if path starts with any public route
